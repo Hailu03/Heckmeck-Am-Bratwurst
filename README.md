@@ -33,7 +33,7 @@
 ---
 
 ### My profile picture
-<img alt="Photo by Lê Thanh Hải on December 12, 2023. May be an image of 1 person, stadium and text." crossorigin="anonymous" src="https://scontent.cdninstagram.com/v/t39.30808-6/410489383_1690148021474296_4576235134731580021_n.jpg?stp=c0.64.1536.1920a_dst-jpg_e15&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImltYWdlX3VybGdlbi4xNTM2eDIwNDguc2RyIn0&amp;_nc_ht=scontent.cdninstagram.com&amp;_nc_cat=104&amp;_nc_ohc=fTY11aNb_QQAX8SsgJ3&amp;edm=APs17CUAAAAA&amp;ccb=7-5&amp;ig_cache_key=MzI1NjE3MzI5NTc0Nzk4ODQxMg%3D%3D.2-ccb7-5&amp;oh=00_AfAYEolcoXkeet6aIGVrTSc6rN3xs1G3oHgSWZIrGRlVAw&amp;oe=657F64F4&amp;_nc_sid=10d13b" class="x5yr21d xu96u03 x10l6tqk x13vifvy x87ps6o xh8yej3" style="object-fit: cover;" style="width: 50%; height: 50%;">
+<img alt="Photo by Lê Thanh Hải on December 12, 2023. May be an image of 1 person, stadium and text." width="350px" crossorigin="anonymous" src="https://scontent.cdninstagram.com/v/t39.30808-6/410489383_1690148021474296_4576235134731580021_n.jpg?stp=c0.64.1536.1920a_dst-jpg_e15&amp;efg=eyJ2ZW5jb2RlX3RhZyI6ImltYWdlX3VybGdlbi4xNTM2eDIwNDguc2RyIn0&amp;_nc_ht=scontent.cdninstagram.com&amp;_nc_cat=104&amp;_nc_ohc=fTY11aNb_QQAX8SsgJ3&amp;edm=APs17CUAAAAA&amp;ccb=7-5&amp;ig_cache_key=MzI1NjE3MzI5NTc0Nzk4ODQxMg%3D%3D.2-ccb7-5&amp;oh=00_AfAYEolcoXkeet6aIGVrTSc6rN3xs1G3oHgSWZIrGRlVAw&amp;oe=657F64F4&amp;_nc_sid=10d13b" class="x5yr21d xu96u03 x10l6tqk x13vifvy x87ps6o xh8yej3" style="object-fit: cover;">
 
 
 </details>
