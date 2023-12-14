@@ -1,14 +1,20 @@
 import java.awt.Color;
 import java.awt.Image;
 import java.awt.Font;
-import javax.swing.BorderFactory;
+import java.awt.Dimension;
 
+import javax.swing.Box;
+import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JButton;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.BoxLayout;
+import javax.swing.border.Border;
+import javax.swing.Box;
 
 import java.util.Random;
 
@@ -207,11 +213,62 @@ public class MyFrame extends JFrame {
         setLayout(null); // Set layout to null
 
         //1. Add Players
-        addPlayers("Player 1", "Player 2", "Player 3", "Player 4");
+        addPlayers("Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8");
         Player currentPlayer = getCurrentPlayer();
         JLabel playerName = new JLabel(currentPlayer.getName());
         playerName.setBounds(10, 160, 100, 30);
         this.add(playerName);
+
+        // Create a JPanel to hold multiple PlayerBoxes
+        JPanel playerPanel = new JPanel();
+        playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS));
+        playerPanel.setBackground(new Color(51,255,153));
+
+        // Add vertical spacing between PlayerBoxes
+        int verticalSpacing = 10;
+
+        //creating players box
+        for(int i = 0; i < players.size(); i++) {
+            PlayerBox playerBox = new PlayerBox(players.get(i).getName());
+            playerPanel.add(playerBox);
+
+            if (i < players.size() - 1) {
+                playerPanel.add(Box.createRigidArea(new Dimension(0, verticalSpacing)));
+            }
+        }
+
+        // playerPanel.setBounds(1000, 130, 500, 1000);
+        // this.add(playerPanel);
+
+        // Set the preferred size for the playerPanel to enable proper scrolling
+        Dimension size = new Dimension(100, (players.size() * 220) + ((players.size() - 1) * verticalSpacing));
+        playerPanel.setPreferredSize(size);
+
+        // Add the playerPanel to a JScrollPane
+        JScrollPane scrollPane = new JScrollPane(playerPanel);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setBounds(1000, 124, 190, 635);
+        this.add(scrollPane);
+
+        //creating players box
+        // for(int i = 0; i < players.size(); i++) {
+        //     PlayerBox playerBox = new PlayerBox(players.get(i).getName());
+        //     playerBox.setBounds(1000,124 + (i * 220), 200, 200);
+        //     this.add(playerBox);
+        // }
+
+
+
+
+        // PlayerBox playerBox1 = new PlayerBox("Player 1");
+        // PlayerBox playerBox2 = new PlayerBox("Player 2");
+
+        // this.add(playerBox1);
+        // this.add(playerBox2);
+
+        // positions of the player boxes
+        // playerBox1.setBounds(200, 150, 120, 200);
+        // playerBox2.setBounds(400, 150, 120, 200);
 
         // create list of image and display it
         JPanel imagepanel = new JPanel();
@@ -239,7 +296,7 @@ public class MyFrame extends JFrame {
         ImageIcon logo = new ImageIcon("resources/logo.jpeg");
         this.setIconImage(logo.getImage());
         this.getContentPane().setBackground(new Color(51,255,153));
-
+        
         // Add a border to the panel
         imagepanel.setBorder(BorderFactory.createLineBorder(Color.black));
     }
