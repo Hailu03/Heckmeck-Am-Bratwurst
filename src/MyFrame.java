@@ -28,6 +28,7 @@ import java.util.Map;
 public class MyFrame extends JFrame {
     private int DICE_COUNT = 8;
     Map<Integer, Integer> DiceArray = new HashMap<Integer, Integer>();
+    private int dice_score = 0;
     private boolean canClick = false;
     String[] images = {"resources/21.jpg", "resources/22.jpg","resources/23.jpg","resources/24.jpg","resources/25.jpg","resources/26.jpg","resources/27.jpg","resources/28.jpg","resources/29.jpg","resources/30.jpg","resources/31.jpg","resources/32.jpg","resources/33.jpg","resources/34.jpg","resources/35.jpg","resources/36.jpg"};
 
@@ -133,6 +134,17 @@ public class MyFrame extends JFrame {
 
                         // Add the dice images back to the array
                         AddDiceGuiComponents(diceImgs,playerName);
+                    } else {
+                        for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
+                            int temp = each.getKey();
+                            if(temp == 6) {
+                                temp = 5;
+                            }
+                            dice_score += each.getValue() * temp;
+                        }
+
+                        System.out.println("Score of dice: " + dice_score);
+                        JLabel score_dice = new JLabel(String.format("Score = %d", dice_score));
                     }
                 }
             });
