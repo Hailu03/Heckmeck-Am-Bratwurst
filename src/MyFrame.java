@@ -172,17 +172,28 @@ public class MyFrame extends JFrame {
                     }
 
                     if (DICE_COUNT == 0) {
+                        boolean haveWorm = false;
+                        // check whether the player is fail or not 
                         for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
-                            int temp = each.getKey();
-                            if(temp == 6) {
-                                temp = 5;
+                            if(each.getKey() == 6) {
+                                haveWorm = true;
                             }
+                        } 
 
-                            System.out.println("Key = " + each.getKey() + ", Value = " + each.getValue());
-                            dice_score += each.getValue() * temp;
+                        if(haveWorm) {
+                            for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
+                                int temp = each.getKey();
+                                if(temp == 6) {
+                                    temp = 5;
+                                }
+                                System.out.println("Key = " + each.getKey() + ", Value = " + each.getValue());
+                                dice_score += each.getValue() * temp;
+                            }
+    
+                            System.out.println("Player "+ playerName + " Score of dice: " + dice_score);
+                        } else {
+                            JOptionPane.showMessageDialog(MyFrame.this, "You failed this round.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
                         }
-
-                        System.out.println("Score of dice: " + dice_score);
 
                         NextTurn(playerName);
                     } 
@@ -247,7 +258,7 @@ public class MyFrame extends JFrame {
 
                             if(remainder == DICE_COUNT) {
                                 // Pop up a message to announce failure of the player
-                                JOptionPane.showMessageDialog(MyFrame.this, "You are fail.", "Error", JOptionPane.ERROR_MESSAGE);
+                                JOptionPane.showMessageDialog(MyFrame.this, "You failed this round.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
                                 NextTurn(playerName);
                             }
                         }
