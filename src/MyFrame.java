@@ -33,6 +33,8 @@ import java.util.Map;
 
 public class MyFrame extends JFrame {
     private int DICE_COUNT = 8;
+
+    ImageLabel[] diceImgs = new ImageLabel[DICE_COUNT];
     Map<Integer, Integer> DiceArray = new HashMap<Integer, Integer>();
     private int dice_score = 0;
     private boolean canClick = false;
@@ -44,7 +46,7 @@ public class MyFrame extends JFrame {
 
     private void addPlayers(String... playerNames) {
         for (String name : playerNames) {
-            players.add(new Player(name));
+            players.add(new Player(name, "Human"));
         }
     }
 
@@ -68,12 +70,45 @@ public class MyFrame extends JFrame {
         this.add(imagepanel);
     }
 
-    private void AddDiceGuiComponents(ImageLabel[] diceImgs,JLabel playerName) {
+    // Fail function
+    private void NextTurn(JLabel playerName) {
+        currentPlayerIndex++; // Move to the next player
+        // Update the label to show the current player
+        Player currentPlayer = getCurrentPlayer();
+        playerName.setText(currentPlayer.getName());
+
+        // delete the remaining image from frame
+        for(int i = 0; i < DICE_COUNT; i++) {
+            MyFrame.this.remove(diceImgs[i]);
+        }
+
+        MyFrame.this.revalidate();
+        MyFrame.this.repaint();
+
+        // Reset the dice count
+        DICE_COUNT = 8;
+
+        // Reset the dice array
+        DiceArray.clear();
+
+        // reset the click button
+        canClick = false;
+
+        // Reset the dice score
+        dice_score = 0;
+
+        // Add the dice images back to the array
+        AddDiceGuiComponents(playerName);
+    }
+
+    private void AddDiceGuiComponents(JLabel playerName) {
         // Create JLabel elements for all 8 dices
         for (int i = 0; i < DICE_COUNT; i++) {
             int randomNumber = new Random().nextInt(6) + 1;
             diceImgs[i] = ImgService.loadImage(String.format("resources/dice%d.png",randomNumber));   
             diceImgs[i].setBounds((i * 80), 600, 80, 90);
+            MyFrame.this.revalidate();
+            MyFrame.this.repaint();
 
             // Adding a MouseListener to each JLabel
             final int index = i; // Create a final variable to use inside the MouseListener
@@ -85,73 +120,72 @@ public class MyFrame extends JFrame {
                         // Create a list to store the remaining ImageLabels
                         ImageLabel clickedLabel = (ImageLabel) e.getSource();
                         String imageName = clickedLabel.getImageName();
-                        int count = 0;
                         
-                        // Remove the clicked image from the frame
-                        for(int i = 0; i < DICE_COUNT; i++){
-                            if (diceImgs[i].getImageName().equals(imageName)) {
-                                count++;
-                                MyFrame.this.remove(diceImgs[i]); // Remove the image that matches the clicked one
+                        boolean isAppeared = false;
+
+                        for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
+                            if(each.getKey() == Integer.parseInt(imageName.substring(imageName.length() - 5, imageName.length() - 4))) {
+                                isAppeared = true;
                             }
                         }
 
-                        // Remove the clicked image from the array
-                        int temp = DICE_COUNT;
-                        for(int i = 0; i < temp; i++){
-                            if (diceImgs[i].getImageName().equals(imageName)) {
-                                for(int k = i; k < DICE_COUNT-1; k++) {
-                                        diceImgs[k] = diceImgs[k+1];
-                                    }
-                                temp--;
-                                i--;
+                        if(isAppeared == true) {
+                            JOptionPane.showMessageDialog(MyFrame.this, "Please select different dice.", "Error", JOptionPane.ERROR_MESSAGE);
+                            return;
+                        } else {
+                            int count = 0;
+                            // Remove the clicked image from the frame1
+                            for(int i = 0; i < DICE_COUNT; i++){
+                                if (diceImgs[i].getImageName().equals(imageName)) {
+                                    count++;
+                                    MyFrame.this.remove(diceImgs[i]); // Remove the image that matches the clicked one
+                                }
                             }
+    
+                            // Remove the clicked image from the array
+                            int temp = DICE_COUNT;
+                            for(int i = 0; i < temp; i++){
+                                if (diceImgs[i].getImageName().equals(imageName)) {
+                                    for(int k = i; k < DICE_COUNT-1; k++) {
+                                            diceImgs[k] = diceImgs[k+1];
+                                        }
+                                    temp--;
+                                    i--;
+                                }
+                            }
+                            DICE_COUNT -= count; // Update the number of remaining dice
+    
+                            MyFrame.this.revalidate();
+                            MyFrame.this.repaint();
+                            canClick = false;
+    
+                            // Update the current player's dice score
+                            DiceArray.put(Integer.parseInt(imageName.substring(imageName.length() - 5, imageName.length() - 4)), count);
+    
+                            // Add remaining images to the frame
+                            System.out.println("Clicked on: " + imageName.charAt(imageName.length() - 5) + " appears " + count + " times");
                         }
-                        DICE_COUNT -= count; // Update the number of remaining dice
-
-                        // Update the current player's dice score
-                        DiceArray.put(Integer.parseInt(imageName.substring(imageName.length() - 5, imageName.length() - 4)), count);
-
-                        // Add remaining images to the frame
-                        System.out.println("Clicked on: " + imageName.charAt(imageName.length() - 5) + " appears " + count + " times");
 
                     } else {
                         // Display error message
                         JOptionPane.showMessageDialog(MyFrame.this, "Please roll the dice before selecting.", "Error", JOptionPane.ERROR_MESSAGE);
                     }
-                    
-                    MyFrame.this.revalidate();
-                    MyFrame.this.repaint();
-                    canClick = false;
 
                     if (DICE_COUNT == 0) {
-                        currentPlayerIndex++; // Move to the next player
-                        // Update the label to show the current player
-                        Player currentPlayer = getCurrentPlayer();
-                        playerName.setText(currentPlayer.getName());
-
-                        // Reset the dice count
-                        DICE_COUNT = 8;
-
-                        // Reset the dice array
-                        DiceArray.clear();
-
-                        // reset the click button
-                        canClick = false;
-
-                        // Add the dice images back to the array
-                        AddDiceGuiComponents(diceImgs,playerName);
-                    } else {
                         for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
                             int temp = each.getKey();
                             if(temp == 6) {
                                 temp = 5;
                             }
+
+                            System.out.println("Key = " + each.getKey() + ", Value = " + each.getValue());
                             dice_score += each.getValue() * temp;
                         }
 
                         System.out.println("Score of dice: " + dice_score);
-                        JLabel score_dice = new JLabel(String.format("Score = %d", dice_score));
-                    }
+
+                        NextTurn(playerName);
+                    } 
                 }
             });
             this.add(diceImgs[i]);
@@ -159,7 +193,7 @@ public class MyFrame extends JFrame {
     }
 
     // Add roll button
-    private void AddRollButton(JButton rollButton, ImageLabel[] diceImgs) {
+    private void AddRollButton(JButton rollButton,JLabel playerName) {
         rollButton.setBounds(230, 700, 120, 30);
         this.add(rollButton);
         Random rand = new Random();
@@ -198,6 +232,24 @@ public class MyFrame extends JFrame {
 
                             rollButton.setEnabled(true);
                             canClick = true;
+
+                            // check all of elements in diceImgs whether they are in DiceArray or not
+                            int remainder = 0;
+                            boolean checkFailed = false;
+                            for(int j = 0; j < DICE_COUNT; j++) {
+                                boolean isAppeared = false;
+                                for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
+                                    if(each.getKey() == Integer.parseInt(diceImgs[j].getImageName().substring(diceImgs[j].getImageName().length() - 5, diceImgs[j].getImageName().length() - 4))) {
+                                        remainder++;
+                                    }
+                                }
+                            }
+
+                            if(remainder == DICE_COUNT) {
+                                // Pop up a message to announce failure of the player
+                                JOptionPane.showMessageDialog(MyFrame.this, "You are fail.", "Error", JOptionPane.ERROR_MESSAGE);
+                                NextTurn(playerName);
+                            }
                         }
                     });
                     rollThread.start();
@@ -250,42 +302,20 @@ public class MyFrame extends JFrame {
         scrollPane.setBounds(1000, 124, 190, 635);
         this.add(scrollPane);
 
-        //creating players box
-        // for(int i = 0; i < players.size(); i++) {
-        //     PlayerBox playerBox = new PlayerBox(players.get(i).getName());
-        //     playerBox.setBounds(1000,124 + (i * 220), 200, 200);
-        //     this.add(playerBox);
-        // }
-
-
-
-
-        // PlayerBox playerBox1 = new PlayerBox("Player 1");
-        // PlayerBox playerBox2 = new PlayerBox("Player 2");
-
-        // this.add(playerBox1);
-        // this.add(playerBox2);
-
-        // positions of the player boxes
-        // playerBox1.setBounds(200, 150, 120, 200);
-        // playerBox2.setBounds(400, 150, 120, 200);
-
         // create list of image and display it
         JPanel imagepanel = new JPanel();
         AddImageGuiComponents(imagepanel);
 
-        ImageLabel[] diceImgs = new ImageLabel[DICE_COUNT];
-        AddDiceGuiComponents(diceImgs,playerName);
+        AddDiceGuiComponents(playerName);
 
         //3. Roll Button
         Random rand = new Random();
         JButton rollButton = new JButton("Roll All Dice!");
         Font buttonFont = new Font("Arial", Font.BOLD, 12); // Change the 16 to adjust the font size
         rollButton.setFont(buttonFont);
-        AddRollButton(rollButton,diceImgs);
+        AddRollButton(rollButton,playerName);
         
         this.add(rollButton);
-
 
         this.setTitle("Heckmeck am Bratwurmeck");
         this.setSize(1200,800);
@@ -299,5 +329,8 @@ public class MyFrame extends JFrame {
         
         // Add a border to the panel
         imagepanel.setBorder(BorderFactory.createLineBorder(Color.black));
+
+        this.repaint();
+        this.revalidate();
     }
 }
