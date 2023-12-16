@@ -8,7 +8,6 @@ public class Tile {
         this.value = value;
     }
 
-
     public int getNumber() {
         return number;
     }

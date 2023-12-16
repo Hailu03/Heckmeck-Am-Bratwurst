@@ -16,7 +16,7 @@ public class ImgService {
             Image originalImage = originalIcon.getImage();
             
             // Resize the image
-            Image resizedImage = originalImage.getScaledInstance(70, 70, Image.SCALE_DEFAULT);
+            Image resizedImage = originalImage.getScaledInstance(100, 100, Image.SCALE_DEFAULT);
             
             // Create a new ImageIcon with the resized image
             ImageIcon resizedIcon = new ImageIcon(resizedImage);
@@ -39,7 +39,7 @@ public class ImgService {
             Image originalImage = originalIcon.getImage();
             
             // Resize the image
-            Image resizedImage = originalImage.getScaledInstance(70, 70, Image.SCALE_DEFAULT);
+            Image resizedImage = originalImage.getScaledInstance(100, 100, Image.SCALE_DEFAULT);
             
             // Create a new ImageIcon with the resized image
             ImageIcon resizedIcon = new ImageIcon(resizedImage);

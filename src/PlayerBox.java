@@ -4,8 +4,23 @@ import java.awt.*;
 public class PlayerBox extends JPanel {
     private final String playerName;
     private JPanel PlayerBox;
+    private boolean isCurrentPlayer;
+
     public PlayerBox(String playerName) {
         this.playerName = playerName;
+        this.isCurrentPlayer = false;
+        setBackground(Color.WHITE); // Set the default background color
+    }
+
+    public void setCurrentPlayer(boolean isCurrentPlayer) {
+        this.isCurrentPlayer = isCurrentPlayer;
+        // Change the background color based on whether it's the current player or not
+        if (isCurrentPlayer) {
+            setBackground(Color.RED); // Change to red if it's the current player
+        } else {
+            setBackground(Color.WHITE); // Reset to default color if it's not the current player
+        }
+        repaint(); // Repaint to show the updated color
     }
 
     @Override
@@ -19,14 +34,14 @@ public class PlayerBox extends JPanel {
         // transparent rectangle
         Graphics2D g2d = (Graphics2D) g.create();
         g2d.setColor(new Color(0, 0, 0, 0));
-        g2d.fillRect(10, 100, boxWidth, boxHeight);
+        g2d.fillRect(0, 0, boxWidth, boxHeight);
 
         Stroke originalStroke = g2d.getStroke();
         g2d.setStroke(new BasicStroke(3));
 
         // outline of the box
         g2d.setColor(Color.BLACK); // color for the outline
-        g2d.drawLine( 0, 50, 200, 50);
+        g2d.drawLine(0, 50, 200, 50);
 
         // bold style, increased font size
         Font originalFont = g2d.getFont();
@@ -34,7 +49,7 @@ public class PlayerBox extends JPanel {
         g2d.setFont(boldFont);
 
         // draw the player name
-        g2d.drawString(playerName, 1 + 20, 1 + 30); // adjust name's position
+        g2d.drawString(playerName, 1 + 50, 1 + 30); // adjust name's position
 
         g2d.setFont(originalFont);
         g2d.setStroke(originalStroke);

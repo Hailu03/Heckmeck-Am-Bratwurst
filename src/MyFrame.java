@@ -15,6 +15,8 @@ import javax.swing.JScrollPane;
 import javax.swing.BoxLayout;
 import javax.swing.border.Border;
 import javax.swing.Box;
+import javax.swing.BoxLayout;
+
 
 import java.util.Random;
 
@@ -22,6 +24,7 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
+import java.awt.BorderLayout;
 
 import java.util.Arrays;
 import java.util.List;
@@ -36,8 +39,11 @@ public class MyFrame extends JFrame {
 
     ImageLabel[] diceImgs = new ImageLabel[DICE_COUNT];
     Map<Integer, Integer> DiceArray = new HashMap<Integer, Integer>();
+    private List<PlayerBox> Boxes = new ArrayList<>();
     private int dice_score = 0;
     private boolean canClick = false;
+    private boolean stopButtonClick = false;
+
     String[] images = {"resources/21.jpg", "resources/22.jpg","resources/23.jpg","resources/24.jpg","resources/25.jpg","resources/26.jpg","resources/27.jpg","resources/28.jpg","resources/29.jpg","resources/30.jpg","resources/31.jpg","resources/32.jpg","resources/33.jpg","resources/34.jpg","resources/35.jpg","resources/36.jpg"};
 
     // add players
@@ -70,6 +76,49 @@ public class MyFrame extends JFrame {
         this.add(imagepanel);
     }
 
+    private boolean checkWorm() {
+        boolean haveWorm = false;
+        // check whether the player is fail or not 
+        for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
+            if(each.getKey() == 6) {
+                haveWorm = true;
+            }
+        }  
+        return haveWorm;       
+    }
+
+    private void checkPlayerFail(JLabel playerName) {
+        // check all of elements in diceImgs whether they are in DiceArray or not
+        int remainder = 0;
+
+        for(int j = 0; j < DICE_COUNT; j++) {
+            for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
+                if(each.getKey() == Integer.parseInt(diceImgs[j].getImageName().substring(diceImgs[j].getImageName().length() - 5, diceImgs[j].getImageName().length() - 4))) {
+                    remainder++;
+                }
+            }
+        }
+
+        if(remainder == DICE_COUNT) {
+            // Pop up a message to announce failure of the player
+            JOptionPane.showMessageDialog(MyFrame.this, "You failed this round.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
+            NextTurn(playerName);
+        }
+    } 
+
+    private void calculateTotalDice() {
+        for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
+            int temp = each.getKey();
+            if(temp == 6) {
+                temp = 5;
+            }
+            System.out.println("Key = " + each.getKey() + ", Value = " + each.getValue());
+            dice_score += each.getValue() * temp;
+        }
+
+        System.out.println(getCurrentPlayer().getName() + ": " + dice_score);
+    }
+
     // Fail function
     private void NextTurn(JLabel playerName) {
         currentPlayerIndex++; // Move to the next player
@@ -97,6 +146,11 @@ public class MyFrame extends JFrame {
         // Reset the dice score
         dice_score = 0;
 
+        // Update the color of the player boxes
+        for (int i = 0; i < players.size(); i++) {
+            Boxes.get(i).setCurrentPlayer(i == currentPlayerIndex % players.size());
+        }
+
         // Add the dice images back to the array
         AddDiceGuiComponents(playerName);
     }
@@ -106,7 +160,7 @@ public class MyFrame extends JFrame {
         for (int i = 0; i < DICE_COUNT; i++) {
             int randomNumber = new Random().nextInt(6) + 1;
             diceImgs[i] = ImgService.loadImage(String.format("resources/dice%d.png",randomNumber));   
-            diceImgs[i].setBounds((i * 80), 600, 80, 90);
+            diceImgs[i].setBounds(((i+1) * 120), 270, 110, 110);
             MyFrame.this.revalidate();
             MyFrame.this.repaint();
 
@@ -158,6 +212,7 @@ public class MyFrame extends JFrame {
                             MyFrame.this.revalidate();
                             MyFrame.this.repaint();
                             canClick = false;
+                            stopButtonClick = true;
     
                             // Update the current player's dice score
                             DiceArray.put(Integer.parseInt(imageName.substring(imageName.length() - 5, imageName.length() - 4)), count);
@@ -172,25 +227,10 @@ public class MyFrame extends JFrame {
                     }
 
                     if (DICE_COUNT == 0) {
-                        boolean haveWorm = false;
-                        // check whether the player is fail or not 
-                        for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
-                            if(each.getKey() == 6) {
-                                haveWorm = true;
-                            }
-                        } 
+                        boolean haveWorm = checkWorm();
 
                         if(haveWorm) {
-                            for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
-                                int temp = each.getKey();
-                                if(temp == 6) {
-                                    temp = 5;
-                                }
-                                System.out.println("Key = " + each.getKey() + ", Value = " + each.getValue());
-                                dice_score += each.getValue() * temp;
-                            }
-    
-                            System.out.println("Player "+ playerName + " Score of dice: " + dice_score);
+                            calculateTotalDice();
                         } else {
                             JOptionPane.showMessageDialog(MyFrame.this, "You failed this round.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
                         }
@@ -203,9 +243,33 @@ public class MyFrame extends JFrame {
         }
     }
 
+    private void AddStopButton(JButton stopButton,JLabel playerName) {
+        stopButton.setBounds(600,470,120,30);
+        this.add(stopButton);
+
+        // Add action listener to stop button
+        stopButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (stopButtonClick == true) {
+                    int choose = JOptionPane.showConfirmDialog(null,"Do you want to stop your turn?", "choose one", JOptionPane.YES_NO_OPTION);
+                    if(choose == 0) {
+                        System.out.println("Stop!!!");
+                        calculateTotalDice();
+                        stopButtonClick = false;
+                        NextTurn(playerName);
+                    }
+                } else {
+                    // Display error message
+                    JOptionPane.showMessageDialog(MyFrame.this, "Please finish your turn before stop", "Error", JOptionPane.ERROR_MESSAGE);
+                }
+            }
+        });
+    }
+
     // Add roll button
     private void AddRollButton(JButton rollButton,JLabel playerName) {
-        rollButton.setBounds(230, 700, 120, 30);
+        rollButton.setBounds(460, 470, 120, 30);
         this.add(rollButton);
         Random rand = new Random();
 
@@ -244,23 +308,7 @@ public class MyFrame extends JFrame {
                             rollButton.setEnabled(true);
                             canClick = true;
 
-                            // check all of elements in diceImgs whether they are in DiceArray or not
-                            int remainder = 0;
-                            boolean checkFailed = false;
-                            for(int j = 0; j < DICE_COUNT; j++) {
-                                boolean isAppeared = false;
-                                for(Map.Entry<Integer,Integer> each : DiceArray.entrySet()) {
-                                    if(each.getKey() == Integer.parseInt(diceImgs[j].getImageName().substring(diceImgs[j].getImageName().length() - 5, diceImgs[j].getImageName().length() - 4))) {
-                                        remainder++;
-                                    }
-                                }
-                            }
-
-                            if(remainder == DICE_COUNT) {
-                                // Pop up a message to announce failure of the player
-                                JOptionPane.showMessageDialog(MyFrame.this, "You failed this round.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
-                                NextTurn(playerName);
-                            }
+                            checkPlayerFail(playerName);
                         }
                     });
                     rollThread.start();
@@ -276,7 +324,7 @@ public class MyFrame extends JFrame {
         setLayout(null); // Set layout to null
 
         //1. Add Players
-        addPlayers("Player 1", "Player 2", "Player 3", "Player 4", "Player 5", "Player 6", "Player 7", "Player 8");
+        addPlayers("Player 1", "Player 2", "Player 3","Player 4","Player 5","Player 6","Player 7");
         Player currentPlayer = getCurrentPlayer();
         JLabel playerName = new JLabel(currentPlayer.getName());
         playerName.setBounds(10, 160, 100, 30);
@@ -284,7 +332,6 @@ public class MyFrame extends JFrame {
 
         // Create a JPanel to hold multiple PlayerBoxes
         JPanel playerPanel = new JPanel();
-        playerPanel.setLayout(new BoxLayout(playerPanel, BoxLayout.Y_AXIS));
         playerPanel.setBackground(new Color(51,255,153));
 
         // Add vertical spacing between PlayerBoxes
@@ -293,10 +340,13 @@ public class MyFrame extends JFrame {
         //creating players box
         for(int i = 0; i < players.size(); i++) {
             PlayerBox playerBox = new PlayerBox(players.get(i).getName());
+            Boxes.add(playerBox);
+            playerBox.setPreferredSize(new Dimension(200, 200)); // Set a fixed height, adjust as needed
+            playerBox.setCurrentPlayer(i == currentPlayerIndex % players.size());
             playerPanel.add(playerBox);
 
             if (i < players.size() - 1) {
-                playerPanel.add(Box.createRigidArea(new Dimension(0, verticalSpacing)));
+                playerPanel.add(Box.createRigidArea(new Dimension(verticalSpacing, 0)));
             }
         }
 
@@ -304,13 +354,16 @@ public class MyFrame extends JFrame {
         // this.add(playerPanel);
 
         // Set the preferred size for the playerPanel to enable proper scrolling
-        Dimension size = new Dimension(100, (players.size() * 220) + ((players.size() - 1) * verticalSpacing));
+        // Dimension size = new Dimension(100, (players.size() * 220) + ((players.size() - 1) * verticalSpacing));
+        Dimension size = new Dimension((players.size() * 220) + ((players.size() - 1) * verticalSpacing),100);
         playerPanel.setPreferredSize(size);
 
         // Add the playerPanel to a JScrollPane
         JScrollPane scrollPane = new JScrollPane(playerPanel);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
-        scrollPane.setBounds(1000, 124, 190, 635);
+        // scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+        // scrollPane.setBounds(1000, 124, 190, 635);
+        scrollPane.setBounds(0, 543, 1186, 220);
         this.add(scrollPane);
 
         // create list of image and display it
@@ -319,12 +372,17 @@ public class MyFrame extends JFrame {
 
         AddDiceGuiComponents(playerName);
 
-        //3. Roll Button
-        Random rand = new Random();
-        JButton rollButton = new JButton("Roll All Dice!");
         Font buttonFont = new Font("Arial", Font.BOLD, 12); // Change the 16 to adjust the font size
+        
+        //Roll Button
+        JButton rollButton = new JButton("Roll All Dice!");
         rollButton.setFont(buttonFont);
         AddRollButton(rollButton,playerName);
+
+        // Stop Button
+        JButton stopButton = new JButton("Stop");
+        stopButton.setFont(buttonFont);
+        AddStopButton(stopButton,playerName);
         
         this.add(rollButton);
 
