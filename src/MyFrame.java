@@ -3,6 +3,8 @@ import java.awt.Image;
 import java.awt.Font;
 import java.awt.Dimension;
 
+import java.util.Stack;
+
 import javax.swing.Box;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
@@ -44,7 +46,7 @@ public class MyFrame extends JFrame {
     private boolean canClick = false;
     private boolean stopButtonClick = false;
 
-    String[] images = {"resources/21.jpg", "resources/22.jpg","resources/23.jpg","resources/24.jpg","resources/25.jpg","resources/26.jpg","resources/27.jpg","resources/28.jpg","resources/29.jpg","resources/30.jpg","resources/31.jpg","resources/32.jpg","resources/33.jpg","resources/34.jpg","resources/35.jpg","resources/36.jpg"};
+    int[] images = {21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36};
 
     // add players
     private List<Player> players = new ArrayList<>();
@@ -65,7 +67,7 @@ public class MyFrame extends JFrame {
         imagepanel.setBounds(0, 0, 1190, 120);
 
         for (int i = 0; i < images.length; i++) {
-            ImageIcon img = new ImageIcon(images[i]);
+            ImageIcon img = new ImageIcon("resources/"+String.valueOf(images[i])+".jpg");
             Image newImg = img.getImage().getScaledInstance(69, 118, Image.SCALE_SMOOTH); 
             img = new ImageIcon(newImg);
             
@@ -117,6 +119,30 @@ public class MyFrame extends JFrame {
         }
 
         System.out.println(getCurrentPlayer().getName() + ": " + dice_score);
+
+        if(dice_score > 20 && dice_score < 37) {
+            // Create a Tile object with the dice_score
+            Tile tile = new Tile(dice_score);
+            
+            // Push the Tile onto the player's tiles stack
+            players.get(currentPlayerIndex % players.size()).getTiles().push(tile);
+
+            Stack<Tile> tiles = new Stack<>();
+            tiles.addAll(players.get(currentPlayerIndex % players.size()).getTiles());
+            
+            System.out.println("Tiles for Player " + players.get(currentPlayerIndex % players.size()).getName() + ":");
+            for (Tile t : tiles) {
+                System.out.println("Tile score: " + t.getValue());
+            }
+            
+            // Get the currentPlayerBox
+            PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
+
+            // Update the image in the PlayerBox
+            currentPlayerBox.updateImage(dice_score);
+        } else {
+            JOptionPane.showMessageDialog(MyFrame.this, "No score on grill. You fail!!", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     // Fail function
@@ -131,25 +157,28 @@ public class MyFrame extends JFrame {
             MyFrame.this.remove(diceImgs[i]);
         }
 
-        MyFrame.this.revalidate();
-        MyFrame.this.repaint();
-
+        
+        players.get(currentPlayerIndex % players.size()).getTiles().clear();
+        
         // Reset the dice count
         DICE_COUNT = 8;
-
+        
         // Reset the dice array
         DiceArray.clear();
-
+        
         // reset the click button
         canClick = false;
-
+        
         // Reset the dice score
         dice_score = 0;
-
+        
         // Update the color of the player boxes
         for (int i = 0; i < players.size(); i++) {
             Boxes.get(i).setCurrentPlayer(i == currentPlayerIndex % players.size());
         }
+        
+        MyFrame.this.revalidate();
+        MyFrame.this.repaint();
 
         // Add the dice images back to the array
         AddDiceGuiComponents(playerName);
@@ -208,6 +237,7 @@ public class MyFrame extends JFrame {
                                 }
                             }
                             DICE_COUNT -= count; // Update the number of remaining dice
+                            System.out.println(DICE_COUNT);
     
                             MyFrame.this.revalidate();
                             MyFrame.this.repaint();
@@ -324,7 +354,7 @@ public class MyFrame extends JFrame {
         setLayout(null); // Set layout to null
 
         //1. Add Players
-        addPlayers("Player 1", "Player 2", "Player 3","Player 4","Player 5","Player 6","Player 7");
+        addPlayers("Player 1", "Player 2");
         Player currentPlayer = getCurrentPlayer();
         JLabel playerName = new JLabel(currentPlayer.getName());
         playerName.setBounds(10, 160, 100, 30);

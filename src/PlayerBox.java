@@ -5,11 +5,32 @@ public class PlayerBox extends JPanel {
     private final String playerName;
     private JPanel PlayerBox;
     private boolean isCurrentPlayer;
+    private int[] images = {21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36};
 
     public PlayerBox(String playerName) {
         this.playerName = playerName;
         this.isCurrentPlayer = false;
         setBackground(Color.WHITE); // Set the default background color
+    }
+
+    public void updateImage(int score) {
+        removeAll();
+        
+        // Assuming your images array contains image numbers 21 to 36
+        int imageIndex = score - 21; // Adjust the score to correspond to the array index
+        String imagePath = "resources/" + images[imageIndex] + ".jpg";
+
+        ImageIcon icon = new ImageIcon(imagePath);
+        Image originalImage = icon.getImage();
+        // Resize the image
+        Image resizedImage = originalImage.getScaledInstance(69, 118, Image.SCALE_DEFAULT);
+        
+        // Create a new ImageIcon with the resized image
+        ImageIcon resizedIcon = new ImageIcon(resizedImage);
+        setLayout(new FlowLayout(FlowLayout.CENTER, 0, 70));
+
+        JLabel imageLabel = new JLabel(resizedIcon);
+        this.add(imageLabel);
     }
 
     public void setCurrentPlayer(boolean isCurrentPlayer) {
