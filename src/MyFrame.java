@@ -165,11 +165,13 @@ public class MyFrame extends JFrame {
             // Update the image in the PlayerBox
             currentPlayerBox.updateImage(dice_score);
         } else {
+            boolean check_fail = true;
             for (int i = 0; i < players.size(); i++) {
                 Stack<Tile> playerTiles = players.get(i).getTiles();
                 if (!playerTiles.isEmpty() && i != currentPlayerIndex % players.size()) {
                     Tile topTile = playerTiles.peek();
                     if(dice_score == topTile.getValue()) {
+                        check_fail = false;
                         Tile steal = playerTiles.pop();
                         players.get(currentPlayerIndex%players.size()).getTiles().push(steal);
 
@@ -180,14 +182,19 @@ public class MyFrame extends JFrame {
                             PlayerBoxBeingStealed.removeImage();
                         }
 
+                        System.out.println(steal.getValue());
+
                         PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
                         currentPlayerBox.updateImage(steal.getValue());
                         break;
                     }
                 } 
             }
-
-            JOptionPane.showMessageDialog(MyFrame.this, "No score on grill. You fail!!", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
+            if(check_fail) {
+                JOptionPane.showMessageDialog(MyFrame.this, "No score on grill. You fail!!", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
+            } else {
+                JOptionPane.showMessageDialog(MyFrame.this, "You steal successfully.", "Congrats", JOptionPane.INFORMATION_MESSAGE);
+            }
         }
 
 
