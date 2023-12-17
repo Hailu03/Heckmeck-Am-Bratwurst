@@ -13,6 +13,10 @@ public class PlayerBox extends JPanel {
         setBackground(Color.WHITE); // Set the default background color
     }
 
+    public void removeImage() {
+        removeAll();
+    }
+
     public void updateImage(int score) {
         removeAll();
 

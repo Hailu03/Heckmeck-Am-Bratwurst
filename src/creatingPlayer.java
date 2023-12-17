@@ -72,9 +72,13 @@ public class creatingPlayer extends JFrame {
     }
 
     private void startGame() {
-        MyFrame frame = new MyFrame(playerNames);
-        frame.setVisible(true);
-        dispose(); // Close the player creation window
+        if(playerNames.size() > 1) {
+            MyFrame frame = new MyFrame(playerNames);
+            frame.setVisible(true);
+            dispose(); // Close the player creation window
+        } else {
+            JOptionPane.showMessageDialog(this, "The game need at least two players", "Error", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 
     public static void main(String[] args) {

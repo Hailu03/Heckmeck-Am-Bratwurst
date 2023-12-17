@@ -38,6 +38,7 @@ import java.util.Map;
 
 public class MyFrame extends JFrame {
     private int DICE_COUNT = 8;
+    JPanel imagepanel = new JPanel();
 
     ImageLabel[] diceImgs = new ImageLabel[DICE_COUNT];
     Map<Integer, Integer> DiceArray = new HashMap<Integer, Integer>();
@@ -46,7 +47,7 @@ public class MyFrame extends JFrame {
     private boolean canClick = false;
     private boolean stopButtonClick = false;
 
-    int[] images = {21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36};
+    List<Integer> images;
 
     // add players
     private List<Player> players = new ArrayList<>();
@@ -62,12 +63,13 @@ public class MyFrame extends JFrame {
         return players.get(currentPlayerIndex % players.size());
     }
 
+
     private void AddImageGuiComponents(JPanel imagepanel) {
         // create list of image and display it
         imagepanel.setBounds(0, 0, 1190, 120);
 
-        for (int i = 0; i < images.length; i++) {
-            ImageIcon img = new ImageIcon("resources/"+String.valueOf(images[i])+".jpg");
+        for (int i = 0; i < images.size(); i++) {
+            ImageIcon img = new ImageIcon("resources/"+String.valueOf(images.get(i))+".jpg");
             Image newImg = img.getImage().getScaledInstance(69, 118, Image.SCALE_SMOOTH); 
             img = new ImageIcon(newImg);
             
@@ -120,20 +122,42 @@ public class MyFrame extends JFrame {
 
         System.out.println(getCurrentPlayer().getName() + ": " + dice_score);
 
-        if(dice_score > 20 && dice_score < 37) {
+        if(dice_score > 20 && dice_score < 37 && images.contains(dice_score)) {
             // Create a Tile object with the dice_score
             Tile tile = new Tile(dice_score);
             
             // Push the Tile onto the player's tiles stack
             players.get(currentPlayerIndex % players.size()).getTiles().push(tile);
-
-            Stack<Tile> tiles = new Stack<>();
-            tiles.addAll(players.get(currentPlayerIndex % players.size()).getTiles());
-            
-            System.out.println("Tiles for Player " + players.get(currentPlayerIndex % players.size()).getName() + ":");
-            for (Tile t : tiles) {
-                System.out.println("Tile score: " + t.getValue());
+            // print
+            // System.out.println(players.get(currentPlayerIndex % players.size()).getTiles().peek().getValue());
+            for(Tile p : players.get(currentPlayerIndex % players.size()).getTiles()) {
+                System.out.println(p.getValue());
             }
+
+            int temp = -1;
+            for(int i = 0; i < images.size(); i++) {
+                if(dice_score == images.get(i)) {
+                    temp = i;
+                }
+            }
+
+            // delete that tile on grill
+            images.remove(temp);
+
+            imagepanel.removeAll(); // Remove all components currently in the panel
+            imagepanel.revalidate(); // Ensure the panel is updated before adding new components
+            
+            for (int i = 0; i < images.size(); i++) {
+                ImageIcon img = new ImageIcon("resources/" + images.get(i) + ".jpg");
+                Image newImg = img.getImage().getScaledInstance(69, 118, Image.SCALE_SMOOTH);
+                img = new ImageIcon(newImg);
+
+                JLabel imageLabel = new JLabel(img);
+                imagepanel.add(imageLabel);
+            }
+
+            imagepanel.revalidate(); // Revalidate the panel after adding new components
+            imagepanel.repaint();
             
             // Get the currentPlayerBox
             PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
@@ -141,8 +165,32 @@ public class MyFrame extends JFrame {
             // Update the image in the PlayerBox
             currentPlayerBox.updateImage(dice_score);
         } else {
+            for (int i = 0; i < players.size(); i++) {
+                Stack<Tile> playerTiles = players.get(i).getTiles();
+                if (!playerTiles.isEmpty() && i != currentPlayerIndex % players.size()) {
+                    Tile topTile = playerTiles.peek();
+                    if(dice_score == topTile.getValue()) {
+                        Tile steal = playerTiles.pop();
+                        players.get(currentPlayerIndex%players.size()).getTiles().push(steal);
+
+                        PlayerBox PlayerBoxBeingStealed = Boxes.get(i);
+                        if(!players.get(i).getTiles().isEmpty()) {
+                            PlayerBoxBeingStealed.updateImage(players.get(i).getTiles().peek().getValue());
+                        } else {
+                            PlayerBoxBeingStealed.removeImage();
+                        }
+
+                        PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
+                        currentPlayerBox.updateImage(steal.getValue());
+                        break;
+                    }
+                } 
+            }
+
             JOptionPane.showMessageDialog(MyFrame.this, "No score on grill. You fail!!", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
         }
+
+
     }
 
     // Fail function
@@ -156,9 +204,6 @@ public class MyFrame extends JFrame {
         for(int i = 0; i < DICE_COUNT; i++) {
             MyFrame.this.remove(diceImgs[i]);
         }
-
-        
-        players.get(currentPlayerIndex % players.size()).getTiles().clear();
         
         // Reset the dice count
         DICE_COUNT = 8;
@@ -353,11 +398,16 @@ public class MyFrame extends JFrame {
     MyFrame(List<String> playerNames) {
         setLayout(null); // Set layout to null
 
+        images = new ArrayList<>();
+        for (int i = 21; i < 37; i++) {
+            images.add(i);
+        }
+
         //1. Add Players
         for(String name : playerNames) {
             addPlayers(name);
         }
-        
+
         Player currentPlayer = getCurrentPlayer();
         JLabel playerName = new JLabel(currentPlayer.getName());
         playerName.setBounds(10, 160, 100, 30);
@@ -400,7 +450,6 @@ public class MyFrame extends JFrame {
         this.add(scrollPane);
 
         // create list of image and display it
-        JPanel imagepanel = new JPanel();
         AddImageGuiComponents(imagepanel);
 
         AddDiceGuiComponents(playerName);
