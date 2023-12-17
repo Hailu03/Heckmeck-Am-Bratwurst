@@ -350,11 +350,14 @@ public class MyFrame extends JFrame {
         });
     }
 
-    MyFrame() {
+    MyFrame(List<String> playerNames) {
         setLayout(null); // Set layout to null
 
         //1. Add Players
-        addPlayers("Player 1", "Player 2");
+        for(String name : playerNames) {
+            addPlayers(name);
+        }
+        
         Player currentPlayer = getCurrentPlayer();
         JLabel playerName = new JLabel(currentPlayer.getName());
         playerName.setBounds(10, 160, 100, 30);

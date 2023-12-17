@@ -15,7 +15,7 @@ public class PlayerBox extends JPanel {
 
     public void updateImage(int score) {
         removeAll();
-        
+
         // Assuming your images array contains image numbers 21 to 36
         int imageIndex = score - 21; // Adjust the score to correspond to the array index
         String imagePath = "resources/" + images[imageIndex] + ".jpg";

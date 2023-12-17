@@ -1,5 +1,7 @@
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
+import java.util.List;
 
 public class creatingPlayer extends JFrame {
     private JPanel addPanel;
@@ -7,14 +9,16 @@ public class creatingPlayer extends JFrame {
     private JButton addButton;
     private JButton startGameButton;
 
+    private List<String> playerNames = new ArrayList<>();
+
     public creatingPlayer() {
         setTitle("Player Creation Menu");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setSize(600, 600); //window size
+        setSize(600, 600); // Window size
         setLocationRelativeTo(null);
 
         // Custom panel with background
-        BackgroundPanel backgroundPanel = new BackgroundPanel("heckmeck-am-bratwurmeck.jpeg");
+        BackgroundPanel backgroundPanel = new BackgroundPanel("resources/heckmeck-am-bratwurmeck.jpeg");
         backgroundPanel.setLayout(new BorderLayout());
 
         // Initialize components
@@ -35,6 +39,10 @@ public class creatingPlayer extends JFrame {
         buttonPanel.add(startGameButton);
         backgroundPanel.add(buttonPanel, BorderLayout.SOUTH);
 
+        // Add action listeners
+        addButton.addActionListener(e -> addPlayer());
+        startGameButton.addActionListener(e -> startGame());
+
         // Set the custom panel as content pane
         setContentPane(backgroundPanel);
 
@@ -53,6 +61,20 @@ public class creatingPlayer extends JFrame {
             super.paintComponent(g);
             g.drawImage(backgroundImage, 0, 0, this.getWidth(), this.getHeight(), this);
         }
+    }
+
+    private void addPlayer() {
+        String playerName = addText.getText().trim();
+        if (!playerName.isEmpty()) {
+            playerNames.add(playerName);
+            addText.setText(""); // Clear the text field after adding the player name
+        }
+    }
+
+    private void startGame() {
+        MyFrame frame = new MyFrame(playerNames);
+        frame.setVisible(true);
+        dispose(); // Close the player creation window
     }
 
     public static void main(String[] args) {
