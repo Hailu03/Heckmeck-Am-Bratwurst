@@ -398,12 +398,16 @@ public class MyFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (stopButtonClick == true) {
-                    int choose = JOptionPane.showConfirmDialog(null,"Do you want to stop your turn?", "choose one", JOptionPane.YES_NO_OPTION);
-                    if(choose == 0) {
-                        System.out.println("Stop!!!");
-                        calculateTotalDice();
-                        stopButtonClick = false;
-                        NextTurn(playerName);
+                    if(checkWorm()) {
+                        int choose = JOptionPane.showConfirmDialog(null,"Do you want to stop your turn?", "choose one", JOptionPane.YES_NO_OPTION);
+                        if(choose == 0) {
+                            System.out.println("Stop!!!");
+                            calculateTotalDice();
+                            stopButtonClick = false;
+                            NextTurn(playerName);
+                        }
+                    } else {
+                        JOptionPane.showMessageDialog(MyFrame.this, "No worm", "Invalid", JOptionPane.INFORMATION_MESSAGE);
                     }
                 } else {
                     // Display error message
