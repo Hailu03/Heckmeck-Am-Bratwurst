@@ -4,6 +4,7 @@ import java.awt.Font;
 import java.awt.Dimension;
 
 import java.util.Stack;
+import java.util.Collections;
 
 import javax.swing.Box;
 import javax.swing.BorderFactory;
@@ -28,6 +29,7 @@ import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
 import java.awt.BorderLayout;
 
+
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -39,6 +41,8 @@ import java.util.Map;
 public class MyFrame extends JFrame {
     private int DICE_COUNT = 8;
     JPanel imagepanel = new JPanel();
+    // Inside the creatingPlayer class constructor
+    private JButton restartButton;
 
     ImageLabel[] diceImgs = new ImageLabel[DICE_COUNT];
     Map<Integer, Integer> DiceArray = new HashMap<Integer, Integer>();
@@ -61,6 +65,16 @@ public class MyFrame extends JFrame {
 
     private Player getCurrentPlayer() {
         return players.get(currentPlayerIndex % players.size());
+    }
+
+    private void restartGame() {
+        int choose = JOptionPane.showConfirmDialog(null,"Do you want to restart game?", "choose one", JOptionPane.YES_NO_OPTION);
+        if(choose == 0) {
+            // Reinitialize playerNames list and reset the text field
+            creatingPlayer newGame = new creatingPlayer();
+            newGame.setVisible(true); // Show the player creation window
+            this.dispose(); // Close the player creation window
+        }
     }
 
 
@@ -91,6 +105,53 @@ public class MyFrame extends JFrame {
         return haveWorm;       
     }
 
+    private void returnAndFlip() {
+        if(!players.get(currentPlayerIndex % players.size()).getTiles().isEmpty()) {
+            int diceValue = players.get(currentPlayerIndex % players.size()).getTiles().pop().getValue();
+            images.add(diceValue);
+            Collections.sort(images);
+
+            // find the max value in images
+            int max = images.get(0);
+            int maxindex = 0;
+            for(int i = 1; i < images.size(); i++) {
+                if(images.get(i) > max && images.get(i) != 1000) {
+                    max = images.get(i);
+                    maxindex = i;
+                }
+            }
+
+            // check whether dice_score is the last element in the images list
+            if(diceValue != max) {
+                images.set(maxindex, 1000);
+            } 
+            
+            imagepanel.removeAll(); // Remove all components currently in the panel
+            imagepanel.revalidate(); // Ensure the panel is updated before adding new components
+            imagepanel.repaint();
+    
+            for(int i = 0; i < images.size(); i++) {
+                ImageIcon img = new ImageIcon("resources/" + images.get(i) + ".jpg");
+                Image newImg = img.getImage().getScaledInstance(69, 118, Image.SCALE_SMOOTH);
+                img = new ImageIcon(newImg);
+    
+                JLabel imageLabel = new JLabel(img);
+                imagepanel.add(imageLabel);
+            }
+
+            imagepanel.revalidate(); // Ensure the panel is updated before adding new components
+            imagepanel.repaint();
+
+            // Get the currentPlayerBox
+            PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
+            currentPlayerBox.removeImage();
+
+            if(!players.get(currentPlayerIndex % players.size()).getTiles().isEmpty()) {
+                currentPlayerBox.updateImage(players.get(currentPlayerIndex % players.size()).getTiles().peek().getValue());
+            }
+        }
+    }
+
     private void checkPlayerFail(JLabel playerName) {
         // check all of elements in diceImgs whether they are in DiceArray or not
         int remainder = 0;
@@ -106,6 +167,7 @@ public class MyFrame extends JFrame {
         if(remainder == DICE_COUNT) {
             // Pop up a message to announce failure of the player
             JOptionPane.showMessageDialog(MyFrame.this, "You failed this round.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
+            returnAndFlip();
             NextTurn(playerName);
         }
     } 
@@ -191,7 +253,8 @@ public class MyFrame extends JFrame {
                 } 
             }
             if(check_fail) {
-                JOptionPane.showMessageDialog(MyFrame.this, "No score on grill. You fail!!", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
+                JOptionPane.showMessageDialog(MyFrame.this, "No score on grill and another player's stack.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
+                returnAndFlip();
             } else {
                 JOptionPane.showMessageDialog(MyFrame.this, "You steal successfully.", "Congrats", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -315,6 +378,7 @@ public class MyFrame extends JFrame {
                             calculateTotalDice();
                         } else {
                             JOptionPane.showMessageDialog(MyFrame.this, "You failed this round.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
+                            returnAndFlip();
                         }
 
                         NextTurn(playerName);
@@ -474,6 +538,12 @@ public class MyFrame extends JFrame {
         AddStopButton(stopButton,playerName);
         
         this.add(rollButton);
+
+        // Add this snippet in your MyFrame constructor after setting up other buttons
+        restartButton = new JButton("Restart Game");
+        restartButton.setBounds(10, 128, 120, 30); // Set the button position and size
+        this.add(restartButton);
+        restartButton.addActionListener(e -> restartGame());
 
         this.setTitle("Heckmeck am Bratwurmeck");
         this.setSize(1200,800);
