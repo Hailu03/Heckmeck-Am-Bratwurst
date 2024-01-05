@@ -43,6 +43,7 @@ public class MyFrame extends JFrame {
     JPanel imagepanel = new JPanel();
     // Inside the creatingPlayer class constructor
     private JButton restartButton;
+    int playerScore = 0;
 
     ImageLabel[] diceImgs = new ImageLabel[DICE_COUNT];
     Map<Integer, Integer> DiceArray = new HashMap<Integer, Integer>();
@@ -262,41 +263,80 @@ public class MyFrame extends JFrame {
 
 
     }
+    // check whether the game is over or not
+    private boolean checkGameOver() {
+        for(int i = 0; i < images.size(); i++) {
+            if(images.get(i) != 1000) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    // who is the winner
+    private int checkWinner() {
+        int playerIndex = -1;
+        int max = 0;
+
+        for(int i = 0; i < players.size(); i++) {
+            int sum = 0;
+            Stack<Tile> tiles = players.get(i).getTiles();
+            for(Tile each : tiles) {
+                sum += (int)Math.ceil((each.getValue() - 21) / 4.0);
+            }
+            if(sum > max) {
+                max = sum;
+                playerIndex = i;
+            }
+        }
+
+        return playerIndex;
+    }
 
     // Fail function
     private void NextTurn(JLabel playerName) {
-        currentPlayerIndex++; // Move to the next player
-        // Update the label to show the current player
-        Player currentPlayer = getCurrentPlayer();
-        playerName.setText(currentPlayer.getName());
+        if(checkGameOver()) {
+            int winnerIndex = checkWinner();
+            WinUI frame = new WinUI(players.get(winnerIndex).getName());
+            frame.setVisible(true);
+            dispose(); // Close the player creation window
+        } else {
+            currentPlayerIndex++; // Move to the next player
+            // Update the label to show the current player
+            Player currentPlayer = getCurrentPlayer();
+            playerName.setText(currentPlayer.getName());
+    
+            // delete the remaining image from frame
+            for(int i = 0; i < DICE_COUNT; i++) {
+                MyFrame.this.remove(diceImgs[i]);
+            }
+            
+            // Reset the dice count
+            DICE_COUNT = 8;
 
-        // delete the remaining image from frame
-        for(int i = 0; i < DICE_COUNT; i++) {
-            MyFrame.this.remove(diceImgs[i]);
+            playerScore = 0;
+            
+            // Reset the dice array
+            DiceArray.clear();
+            
+            // reset the click button
+            canClick = false;
+            
+            // Reset the dice score
+            dice_score = 0;
+            
+            // Update the color of the player boxes
+            for (int i = 0; i < players.size(); i++) {
+                Boxes.get(i).setCurrentPlayer(i == currentPlayerIndex % players.size());
+            }
+            
+            MyFrame.this.revalidate();
+            MyFrame.this.repaint();
+    
+            // Add the dice images back to the array
+            AddDiceGuiComponents(playerName);
         }
-        
-        // Reset the dice count
-        DICE_COUNT = 8;
-        
-        // Reset the dice array
-        DiceArray.clear();
-        
-        // reset the click button
-        canClick = false;
-        
-        // Reset the dice score
-        dice_score = 0;
-        
-        // Update the color of the player boxes
-        for (int i = 0; i < players.size(); i++) {
-            Boxes.get(i).setCurrentPlayer(i == currentPlayerIndex % players.size());
-        }
-        
-        MyFrame.this.revalidate();
-        MyFrame.this.repaint();
-
-        // Add the dice images back to the array
-        AddDiceGuiComponents(playerName);
     }
 
     private void AddDiceGuiComponents(JLabel playerName) {
@@ -315,8 +355,8 @@ public class MyFrame extends JFrame {
                 public void mouseClicked(MouseEvent e) {
                     // When the label is clicked, retrieve the name of the image
                     if(canClick){
-                        // Create a list to store the remaining ImageLabels
                         ImageLabel clickedLabel = (ImageLabel) e.getSource();
+                        // Create a list to store the remaining ImageLabels
                         String imageName = clickedLabel.getImageName();
                         
                         boolean isAppeared = false;
@@ -361,7 +401,16 @@ public class MyFrame extends JFrame {
     
                             // Update the current player's dice score
                             DiceArray.put(Integer.parseInt(imageName.substring(imageName.length() - 5, imageName.length() - 4)), count);
-    
+                            
+                            // if score is 6 then change it to 5 for playerscore
+                            if(Integer.parseInt(imageName.substring(imageName.length() - 5, imageName.length() - 4)) == 6) {
+                                playerScore += 5 * count;
+                            } else {
+                                playerScore += Integer.parseInt(imageName.substring(imageName.length() - 5, imageName.length() - 4)) * count;
+                            }
+
+                            playerName.setText(String.format("%s : %d",getCurrentPlayer().getName(),playerScore));
+
                             // Add remaining images to the frame
                             System.out.println("Clicked on: " + imageName.charAt(imageName.length() - 5) + " appears " + count + " times");
                         }
@@ -383,6 +432,32 @@ public class MyFrame extends JFrame {
 
                         NextTurn(playerName);
                     } 
+                }
+
+                @Override
+                public void mouseEntered(MouseEvent me) {
+                    System.out.println("Mouse entered");
+                    ImageLabel clickedLabel = (ImageLabel) me.getSource();
+                    String imageName = clickedLabel.getImageName();
+
+                    for(int i = 0; i < diceImgs.length; i++){
+                        if (diceImgs[i].getImageName().equals(imageName)) {
+                            ImgService.updateImage(diceImgs[i], "resources/dice" + diceImgs[i].getImageName().substring(diceImgs[i].getImageName().length() - 5, diceImgs[i].getImageName().length() - 4) + ".png",true);
+                        }
+                    }
+                }
+
+                @Override
+                public void mouseExited(MouseEvent me) {
+                    System.out.println("Mouse exited");
+                    ImageLabel clickedLabel = (ImageLabel) me.getSource();
+                    String imageName = clickedLabel.getImageName();
+                    
+                    for(int i = 0; i < diceImgs.length; i++){
+                        if (diceImgs[i].getImageName().equals(imageName)) {
+                            ImgService.updateImage(diceImgs[i], "resources/dice" + diceImgs[i].getImageName().substring(diceImgs[i].getImageName().length() - 5, diceImgs[i].getImageName().length() - 4) + ".png",false);
+                        }
+                    }
                 }
             });
             this.add(diceImgs[i]);
@@ -449,7 +524,7 @@ public class MyFrame extends JFrame {
                                 }
                                 Arrays.sort(diceValue);
                                 for(int i = 0; i < DICE_COUNT; i++){
-                                    ImgService.updateImage(diceImgs[i], "resources/dice" + diceValue[i] + ".png");
+                                    ImgService.updateImage(diceImgs[i], "resources/dice" + diceValue[i] + ".png",false);
                                     repaint();
                                     revalidate();
                                 }
@@ -484,7 +559,8 @@ public class MyFrame extends JFrame {
         }
 
         Player currentPlayer = getCurrentPlayer();
-        JLabel playerName = new JLabel(currentPlayer.getName());
+        JLabel playerName = new JLabel(String.format("%s : %d",currentPlayer.getName(),playerScore));
+        playerName.setFont(new Font("Arial", Font.BOLD, 20));
         playerName.setBounds(10, 160, 100, 30);
         this.add(playerName);
 
