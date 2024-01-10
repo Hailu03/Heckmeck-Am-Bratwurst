@@ -38,7 +38,11 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-public class MyFrame extends JFrame {
+// KeyListener
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
+
+public class MyFrame extends JFrame implements KeyListener {
     private int DICE_COUNT = 8;
     JPanel imagepanel = new JPanel();
     // Inside the creatingPlayer class constructor
@@ -52,7 +56,11 @@ public class MyFrame extends JFrame {
     private boolean canClick = false;
     private boolean stopButtonClick = false;
 
+    JButton rollButton = new JButton("Roll All Dice!");
+
     List<Integer> images;
+
+    JLabel playerName = new JLabel();
 
     // add players
     private List<Player> players = new ArrayList<>();
@@ -60,7 +68,7 @@ public class MyFrame extends JFrame {
 
     private void addPlayers(String... playerNames) {
         for (String name : playerNames) {
-            players.add(new Player(name, "Human"));
+            players.add(new Player(name));
         }
     }
 
@@ -153,7 +161,7 @@ public class MyFrame extends JFrame {
         }
     }
 
-    private void checkPlayerFail(JLabel playerName) {
+    private void checkPlayerFail() {
         // check all of elements in diceImgs whether they are in DiceArray or not
         int remainder = 0;
 
@@ -169,7 +177,7 @@ public class MyFrame extends JFrame {
             // Pop up a message to announce failure of the player
             JOptionPane.showMessageDialog(MyFrame.this, "You failed this round.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
             returnAndFlip();
-            NextTurn(playerName);
+            NextTurn();
         }
     } 
 
@@ -255,7 +263,63 @@ public class MyFrame extends JFrame {
             }
             if(check_fail) {
                 JOptionPane.showMessageDialog(MyFrame.this, "No score on grill and another player's stack.", "Player Failed", JOptionPane.INFORMATION_MESSAGE);
-                returnAndFlip();
+                
+                boolean check = false;
+                if(20 < dice_score && dice_score < 37) {
+                    for(int i = dice_score-1; i > 20; i--) {
+                        dice_score = i;
+                        if(images.contains(i)) {
+                            check = true;
+                            break;
+                        }
+                    }
+                }
+
+                if(!check) {
+                    returnAndFlip();
+                } else {
+                    // Create a Tile object with the dice_score
+                    Tile tile = new Tile(dice_score);
+                    
+                    // Push the Tile onto the player's tiles stack
+                    players.get(currentPlayerIndex % players.size()).getTiles().push(tile);
+                    // print
+                    // System.out.println(players.get(currentPlayerIndex % players.size()).getTiles().peek().getValue());
+                    for(Tile p : players.get(currentPlayerIndex % players.size()).getTiles()) {
+                        System.out.println(p.getValue());
+                    }
+        
+                    int temp = -1;
+                    for(int i = 0; i < images.size(); i++) {
+                        if(dice_score == images.get(i)) {
+                            temp = i;
+                        }
+                    }
+        
+                    // delete that tile on grill
+                    images.remove(temp);
+        
+                    imagepanel.removeAll(); // Remove all components currently in the panel
+                    imagepanel.revalidate(); // Ensure the panel is updated before adding new components
+                    
+                    for (int i = 0; i < images.size(); i++) {
+                        ImageIcon img = new ImageIcon("resources/" + images.get(i) + ".jpg");
+                        Image newImg = img.getImage().getScaledInstance(69, 118, Image.SCALE_SMOOTH);
+                        img = new ImageIcon(newImg);
+        
+                        JLabel imageLabel = new JLabel(img);
+                        imagepanel.add(imageLabel);
+                    }
+        
+                    imagepanel.revalidate(); // Revalidate the panel after adding new components
+                    imagepanel.repaint();
+                    
+                    // Get the currentPlayerBox
+                    PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
+        
+                    // Update the image in the PlayerBox
+                    currentPlayerBox.updateImage(dice_score);
+                }
             } else {
                 JOptionPane.showMessageDialog(MyFrame.this, "You steal successfully.", "Congrats", JOptionPane.INFORMATION_MESSAGE);
             }
@@ -274,31 +338,10 @@ public class MyFrame extends JFrame {
         return true;
     }
 
-    // who is the winner
-    private int checkWinner() {
-        int playerIndex = -1;
-        int max = 0;
-
-        for(int i = 0; i < players.size(); i++) {
-            int sum = 0;
-            Stack<Tile> tiles = players.get(i).getTiles();
-            for(Tile each : tiles) {
-                sum += (int)Math.ceil((each.getValue() - 21) / 4.0);
-            }
-            if(sum > max) {
-                max = sum;
-                playerIndex = i;
-            }
-        }
-
-        return playerIndex;
-    }
-
     // Fail function
-    private void NextTurn(JLabel playerName) {
+    private void NextTurn() {
         if(checkGameOver()) {
-            int winnerIndex = checkWinner();
-            WinUI frame = new WinUI(players.get(winnerIndex).getName());
+            WinUI frame = new WinUI(players);
             frame.setVisible(true);
             dispose(); // Close the player creation window
         } else {
@@ -335,11 +378,11 @@ public class MyFrame extends JFrame {
             MyFrame.this.repaint();
     
             // Add the dice images back to the array
-            AddDiceGuiComponents(playerName);
+            AddDiceGuiComponents();
         }
     }
 
-    private void AddDiceGuiComponents(JLabel playerName) {
+    private void AddDiceGuiComponents() {
         // Create JLabel elements for all 8 dices
         for (int i = 0; i < DICE_COUNT; i++) {
             int randomNumber = new Random().nextInt(6) + 1;
@@ -430,7 +473,7 @@ public class MyFrame extends JFrame {
                             returnAndFlip();
                         }
 
-                        NextTurn(playerName);
+                        NextTurn();
                     } 
                 }
 
@@ -464,7 +507,7 @@ public class MyFrame extends JFrame {
         }
     }
 
-    private void AddStopButton(JButton stopButton,JLabel playerName) {
+    private void AddStopButton(JButton stopButton) {
         stopButton.setBounds(600,470,120,30);
         this.add(stopButton);
 
@@ -473,13 +516,14 @@ public class MyFrame extends JFrame {
             @Override
             public void actionPerformed(ActionEvent e) {
                 if (stopButtonClick == true) {
+                    rollButton.requestFocusInWindow(); // Replace rollButton with the appropriate button variable
                     if(checkWorm()) {
                         int choose = JOptionPane.showConfirmDialog(null,"Do you want to stop your turn?", "choose one", JOptionPane.YES_NO_OPTION);
                         if(choose == 0) {
                             System.out.println("Stop!!!");
                             calculateTotalDice();
                             stopButtonClick = false;
-                            NextTurn(playerName);
+                            NextTurn();
                         }
                     } else {
                         JOptionPane.showMessageDialog(MyFrame.this, "No worm", "Invalid", JOptionPane.INFORMATION_MESSAGE);
@@ -492,61 +536,85 @@ public class MyFrame extends JFrame {
         });
     }
 
+    @Override
+    public void keyPressed(KeyEvent e) {
+        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+            // Roll the dice when spacebar is pressed
+            rollDice(); // Replace this with your dice rolling logic
+        }
+    }
+
+    @Override
+    public void keyReleased(KeyEvent e) {
+        // Your implementation here (if needed)
+    }
+
+    @Override
+    public void keyTyped(KeyEvent e) {
+        // Your implementation for keyTyped
+    }
+
+    private void rollDice() {
+        Random rand = new Random();
+
+        if(canClick == false) {
+
+            // Roll all dice simultaneously
+            long startTime = System.currentTimeMillis();
+            Thread rollThread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    while ((System.currentTimeMillis() - startTime) / 1000F < 3) {
+                        int[] diceValue = new int[DICE_COUNT];
+                        // Roll each dice
+                        for (int i = 0; i < DICE_COUNT; i++) {
+                            diceValue[i] = rand.nextInt(1, 7);
+                            // Sleep for a short period
+                            try {
+                                Thread.sleep(60);
+                            } catch (InterruptedException ex) {
+                                System.out.println("Threading Error: " + ex);
+                            }
+                        }
+                        Arrays.sort(diceValue);
+                        for(int i = 0; i < DICE_COUNT; i++){
+                            ImgService.updateImage(diceImgs[i], "resources/dice" + diceValue[i] + ".png",false);
+                            repaint();
+                            revalidate();
+                        }
+                    }
+
+                    canClick = true;
+
+                    checkPlayerFail();
+                }
+            });
+            rollThread.start();
+        } else {
+            // Display error message
+            JOptionPane.showMessageDialog(MyFrame.this, "Please select dice before rolling.", "Error", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
     // Add roll button
-    private void AddRollButton(JButton rollButton,JLabel playerName) {
+    private void AddRollButton(JButton rollButton) {
         rollButton.setBounds(460, 470, 120, 30);
         this.add(rollButton);
-        Random rand = new Random();
 
         // Add action listener to roll button
         rollButton.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                if(canClick == false) {
-                    rollButton.setEnabled(false);
-    
-                    // Roll all dice simultaneously
-                    long startTime = System.currentTimeMillis();
-                    Thread rollThread = new Thread(new Runnable() {
-                        @Override
-                        public void run() {
-                            while ((System.currentTimeMillis() - startTime) / 1000F < 3) {
-                                int[] diceValue = new int[DICE_COUNT];
-                                // Roll each dice
-                                for (int i = 0; i < DICE_COUNT; i++) {
-                                    diceValue[i] = rand.nextInt(1, 7);
-                                    // Sleep for a short period
-                                    try {
-                                        Thread.sleep(60);
-                                    } catch (InterruptedException ex) {
-                                        System.out.println("Threading Error: " + ex);
-                                    }
-                                }
-                                Arrays.sort(diceValue);
-                                for(int i = 0; i < DICE_COUNT; i++){
-                                    ImgService.updateImage(diceImgs[i], "resources/dice" + diceValue[i] + ".png",false);
-                                    repaint();
-                                    revalidate();
-                                }
-                            }
-
-                            rollButton.setEnabled(true);
-                            canClick = true;
-
-                            checkPlayerFail(playerName);
-                        }
-                    });
-                    rollThread.start();
-                } else {
-                    // Display error message
-                    JOptionPane.showMessageDialog(MyFrame.this, "Please select dice before rolling.", "Error", JOptionPane.ERROR_MESSAGE);
-                }
+                rollDice();
             }
         });
     }
+    
 
     MyFrame(List<String> playerNames) {
         setLayout(null); // Set layout to null
+        this.addKeyListener(this); // Add the KeyListener to the frame
+        this.setFocusable(true); // Ensure the frame can receive focus
 
         images = new ArrayList<>();
         for (int i = 21; i < 37; i++) {
@@ -559,7 +627,8 @@ public class MyFrame extends JFrame {
         }
 
         Player currentPlayer = getCurrentPlayer();
-        JLabel playerName = new JLabel(String.format("%s : %d",currentPlayer.getName(),playerScore));
+        playerName.setText(String.format("%s : %d",currentPlayer.getName(),playerScore));
+
         playerName.setFont(new Font("Arial", Font.BOLD, 20));
         playerName.setBounds(10, 160, 100, 30);
         this.add(playerName);
@@ -603,19 +672,18 @@ public class MyFrame extends JFrame {
         // create list of image and display it
         AddImageGuiComponents(imagepanel);
 
-        AddDiceGuiComponents(playerName);
+        AddDiceGuiComponents();
 
         Font buttonFont = new Font("Arial", Font.BOLD, 12); // Change the 16 to adjust the font size
         
         //Roll Button
-        JButton rollButton = new JButton("Roll All Dice!");
         rollButton.setFont(buttonFont);
-        AddRollButton(rollButton,playerName);
+        AddRollButton(rollButton);
 
         // Stop Button
         JButton stopButton = new JButton("Stop");
         stopButton.setFont(buttonFont);
-        AddStopButton(stopButton,playerName);
+        AddStopButton(stopButton);
         
         this.add(rollButton);
 

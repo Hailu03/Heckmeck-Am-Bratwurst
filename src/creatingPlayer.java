@@ -1,14 +1,16 @@
 import javax.swing.*;
 import java.awt.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent; // Import KeyEvent
+import java.util.ArrayList; // Import ArrayList
+import java.util.List; // Import List
 
 public class creatingPlayer extends JFrame {
     private JPanel addPanel;
     private JTextField addText;
     private JButton addButton;
     private JButton startGameButton;
-
+    private int commandNum = 0;
     private List<String> playerNames = new ArrayList<>();
 
     public creatingPlayer() {
@@ -33,20 +35,107 @@ public class creatingPlayer extends JFrame {
         addPanel.add(addButton);
         backgroundPanel.add(addPanel, BorderLayout.CENTER);
 
-        // Button panel
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        buttonPanel.setOpaque(false); // Make buttonPanel transparent
-        buttonPanel.add(startGameButton);
-        backgroundPanel.add(buttonPanel, BorderLayout.SOUTH);
+        // MENU graphics2D panel
+        JPanel menuPanel = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2d = (Graphics2D) g;
+                g2d.setColor(Color.WHITE);
+                g2d.setFont(g2d.getFont().deriveFont(Font.BOLD, 30F));
+                
+                // Shadow
+                g2d.setColor(Color.GRAY);
+                g2d.drawString("START GAME", 202, 32);
+                g2d.drawString("QUIT", 252, 72);
+
+                g2d.setColor(Color.WHITE);
+                String start = "START GAME";
+                g2d.drawString(start, 200, 30);
+                if (commandNum == 0) {
+                    g2d.drawString(">", 170, 30);
+                }
+
+                String quit = "QUIT";
+                g2d.drawString(quit, 250, 70);
+                if (commandNum == 1) {
+                    g2d.drawString(">", 220, 70);
+                }
+
+            }
+
+            @Override
+            public Dimension getPreferredSize() {
+                return new Dimension(600, 80); // Set the preferred size here
+            }
+
+            @Override
+            public Dimension getMinimumSize() {
+                return getPreferredSize(); // Return the preferred size
+            }
+
+            @Override
+            public Dimension getMaximumSize() {
+                return getPreferredSize(); // Return the preferred size
+            }
+        };
+
+        menuPanel.setOpaque(true); // Make menuPanel transparent
+        menuPanel.setBackground(Color.BLACK);
+        menuPanel.setFocusable(true);
+        
+        // Use Key Bindings for handling key events
+        menuPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "upPressed");
+        menuPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "downPressed");
+
+        menuPanel.getActionMap().put("upPressed", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                commandNum--;
+                if(commandNum < 0) {
+                    commandNum = 1;
+                }
+                repaint(); // Repaint to reflect changes
+            }
+        });
+
+        menuPanel.getActionMap().put("downPressed", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                commandNum++;
+                if(commandNum > 1) {
+                    commandNum = 0;
+                }
+                repaint(); // Repaint to reflect changes
+            }
+        });
+
+        menuPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "performAction");
+
+        menuPanel.getActionMap().put("performAction", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (commandNum == 0) {
+                    startGame(); // Call startGame() when commandNum is 0
+                } else if (commandNum == 1) {
+                    dispose(); // Close the window when commandNum is 1
+                }
+            }
+        });
+
+        backgroundPanel.add(menuPanel, BorderLayout.SOUTH);
 
         // Add action listeners
         addButton.addActionListener(e -> addPlayer());
-        startGameButton.addActionListener(e -> startGame());
+
+        // enter key
+        addText.addActionListener(e -> addPlayer());
 
         // Set the custom panel as content pane
         setContentPane(backgroundPanel);
 
         setVisible(true);
+        requestFocus();
     }
 
     private class BackgroundPanel extends JPanel {
@@ -72,12 +161,12 @@ public class creatingPlayer extends JFrame {
     }
 
     private void startGame() {
-        if(playerNames.size() > 1) {
+        if (playerNames.size() > 1) {
             MyFrame frame = new MyFrame(playerNames);
             frame.setVisible(true);
             dispose(); // Close the player creation window
         } else {
-            JOptionPane.showMessageDialog(this, "The game need at least two players", "Error", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "The game needs at least two players", "Error", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 

@@ -9,10 +9,9 @@ public class Player {
     private String type;
     int id;
 
-    public Player(String name, String type) {
+    public Player(String name) {
         this.name = name;
         this.tiles = new Stack<>();
-        this.type = type;
     }
 
     public void setTiles(Stack<Tile> tiles) {
@@ -28,10 +27,6 @@ public class Player {
 
     public void setId(int id){
         this.id = id;
-    }
-
-    public String getType() {
-        return type;
     }
 
     public Stack<Tile> getTiles() {
