@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.Font;
 import java.awt.Dimension;
+import java.awt.image.ImageObserver;
 
 import java.util.Stack;
 import java.util.Collections;
@@ -44,10 +45,14 @@ import java.awt.event.KeyEvent;
 
 public class MyFrame extends JFrame implements KeyListener {
     private int DICE_COUNT = 8;
-    JPanel imagepanel = new JPanel();
+    ImageIcon imgpanelbackground = new ImageIcon("resources/coins.png");
+    Image ImgPanelBackground = imgpanelbackground.getImage();
+    ImagePanel imagepanel = new ImagePanel(ImgPanelBackground);
+
     // Inside the creatingPlayer class constructor
     private JButton restartButton;
     int playerScore = 0;
+    private JLabel gifLabel;
 
     ImageLabel[] diceImgs = new ImageLabel[DICE_COUNT];
     Map<Integer, Integer> DiceArray = new HashMap<Integer, Integer>();
@@ -55,6 +60,7 @@ public class MyFrame extends JFrame implements KeyListener {
     private int dice_score = 0;
     private boolean canClick = false;
     private boolean stopButtonClick = false;
+    private ImagePanel DicePanel;
 
     JButton rollButton = new JButton("Roll All Dice!");
 
@@ -352,7 +358,7 @@ public class MyFrame extends JFrame implements KeyListener {
     
             // delete the remaining image from frame
             for(int i = 0; i < DICE_COUNT; i++) {
-                MyFrame.this.remove(diceImgs[i]);
+                DicePanel.remove(diceImgs[i]);
             }
             
             // Reset the dice count
@@ -371,6 +377,11 @@ public class MyFrame extends JFrame implements KeyListener {
             
             // Update the color of the player boxes
             for (int i = 0; i < players.size(); i++) {
+                if(i == currentPlayerIndex % players.size()) {
+                    Boxes.get(i).setPlayerName(String.format("%s : %d",players.get(i).getName(),playerScore));
+                } else {
+                    Boxes.get(i).setPlayerName(players.get(i).getName());
+                }
                 Boxes.get(i).setCurrentPlayer(i == currentPlayerIndex % players.size());
             }
             
@@ -388,8 +399,8 @@ public class MyFrame extends JFrame implements KeyListener {
             int randomNumber = new Random().nextInt(6) + 1;
             diceImgs[i] = ImgService.loadImage(String.format("resources/dice%d.png",randomNumber));   
             diceImgs[i].setBounds(((i+1) * 120), 270, 110, 110);
-            MyFrame.this.revalidate();
-            MyFrame.this.repaint();
+            DicePanel.revalidate();
+            DicePanel.repaint();
 
             // Adding a MouseListener to each JLabel
             final int index = i; // Create a final variable to use inside the MouseListener
@@ -419,7 +430,7 @@ public class MyFrame extends JFrame implements KeyListener {
                             for(int i = 0; i < DICE_COUNT; i++){
                                 if (diceImgs[i].getImageName().equals(imageName)) {
                                     count++;
-                                    MyFrame.this.remove(diceImgs[i]); // Remove the image that matches the clicked one
+                                    DicePanel.remove(diceImgs[i]); // Remove the image that matches the clicked one
                                 }
                             }
     
@@ -437,8 +448,8 @@ public class MyFrame extends JFrame implements KeyListener {
                             DICE_COUNT -= count; // Update the number of remaining dice
                             System.out.println(DICE_COUNT);
     
-                            MyFrame.this.revalidate();
-                            MyFrame.this.repaint();
+                            DicePanel.revalidate();
+                            DicePanel.repaint();
                             canClick = false;
                             stopButtonClick = true;
     
@@ -456,6 +467,9 @@ public class MyFrame extends JFrame implements KeyListener {
 
                             // Add remaining images to the frame
                             System.out.println("Clicked on: " + imageName.charAt(imageName.length() - 5) + " appears " + count + " times");
+                        
+                            PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
+                            currentPlayerBox.setPlayerName(String.format("%s : %d",players.get(currentPlayerIndex%players.size()).getName(),playerScore));
                         }
 
                     } else {
@@ -503,12 +517,12 @@ public class MyFrame extends JFrame implements KeyListener {
                     }
                 }
             });
-            this.add(diceImgs[i]);
+            DicePanel.add(diceImgs[i]);
         }
     }
 
     private void AddStopButton(JButton stopButton) {
-        stopButton.setBounds(600,470,120,30);
+        stopButton.setBounds(540,470,120,30);
         this.add(stopButton);
 
         // Add action listener to stop button
@@ -558,7 +572,7 @@ public class MyFrame extends JFrame implements KeyListener {
         Random rand = new Random();
 
         if(canClick == false) {
-
+            canClick = true;
             // Roll all dice simultaneously
             long startTime = System.currentTimeMillis();
             Thread rollThread = new Thread(new Runnable() {
@@ -584,8 +598,6 @@ public class MyFrame extends JFrame implements KeyListener {
                         }
                     }
 
-                    canClick = true;
-
                     checkPlayerFail();
                 }
             });
@@ -598,7 +610,7 @@ public class MyFrame extends JFrame implements KeyListener {
 
     // Add roll button
     private void AddRollButton(JButton rollButton) {
-        rollButton.setBounds(460, 470, 120, 30);
+        rollButton.setBounds(400, 470, 120, 30);
         this.add(rollButton);
 
         // Add action listener to roll button
@@ -626,12 +638,37 @@ public class MyFrame extends JFrame implements KeyListener {
             addPlayers(name);
         }
 
-        Player currentPlayer = getCurrentPlayer();
-        playerName.setText(String.format("%s : %d",currentPlayer.getName(),playerScore));
+        // Load the GIF from the resources folder
+        ImageIcon gifIcon = new ImageIcon("resources/giphy.gif");
+        // Create a JLabel to display the GIF
+        gifLabel = new JLabel(gifIcon);
+        gifLabel.setBounds(350, 25, gifIcon.getIconWidth(), gifIcon.getIconHeight());
+        // resize the gif
+        Image gifImage = gifIcon.getImage();
+        int scale = 3;
+        // get the width and height of the gif
+        Image newGifImage = gifImage.getScaledInstance(gifIcon.getIconWidth()/scale, gifIcon.getIconHeight()/scale, Image.SCALE_DEFAULT);
+        gifIcon = new ImageIcon(newGifImage);
+        gifLabel.setIcon(gifIcon);
+        this.add(gifLabel);
 
-        playerName.setFont(new Font("Arial", Font.BOLD, 20));
-        playerName.setBounds(10, 160, 100, 30);
-        this.add(playerName);
+        // Set background image for backgroundPanel using custom ImagePanel class
+        ImageIcon backgroundIcon = new ImageIcon("resources/woodtable.jpg");
+        Image backgroundImage = backgroundIcon.getImage();
+        // ImagePanel backgroundPanel = new ImagePanel(backgroundImage);
+        // backgroundPanel.setLayout(null); // Set layout to null for manual positioning
+        // backgroundPanel.setBounds(180, 300, 800, 120);
+
+        // Create a JPanel to hold the dice images
+        DicePanel = new ImagePanel(backgroundImage);
+        DicePanel.setBounds(180, 300, 800, 120);
+        DicePanel.setLayout(new BoxLayout(DicePanel, BoxLayout.X_AXIS));
+        DicePanel.setBackground(new Color(51,255,153));
+
+        // Add components
+        // backgroundPanel.add(DicePanel);
+        
+        this.add(DicePanel);
 
         // Create a JPanel to hold multiple PlayerBoxes
         JPanel playerPanel = new JPanel();
@@ -642,7 +679,13 @@ public class MyFrame extends JFrame implements KeyListener {
 
         //creating players box
         for(int i = 0; i < players.size(); i++) {
-            PlayerBox playerBox = new PlayerBox(players.get(i).getName());
+            PlayerBox playerBox;
+            if(i == currentPlayerIndex % players.size()) {
+                playerBox = new PlayerBox(String.format("%s : %d",players.get(i).getName(),playerScore));
+            } else {
+                playerBox = new PlayerBox(players.get(i).getName());
+            }
+
             Boxes.add(playerBox);
             playerBox.setPreferredSize(new Dimension(200, 200)); // Set a fixed height, adjust as needed
             playerBox.setCurrentPlayer(i == currentPlayerIndex % players.size());
@@ -652,9 +695,6 @@ public class MyFrame extends JFrame implements KeyListener {
                 playerPanel.add(Box.createRigidArea(new Dimension(verticalSpacing, 0)));
             }
         }
-
-        // playerPanel.setBounds(1000, 130, 500, 1000);
-        // this.add(playerPanel);
 
         // Set the preferred size for the playerPanel to enable proper scrolling
         // Dimension size = new Dimension(100, (players.size() * 220) + ((players.size() - 1) * verticalSpacing));
@@ -689,7 +729,7 @@ public class MyFrame extends JFrame implements KeyListener {
 
         // Add this snippet in your MyFrame constructor after setting up other buttons
         restartButton = new JButton("Restart Game");
-        restartButton.setBounds(10, 128, 120, 30); // Set the button position and size
+        restartButton.setBounds(680, 470, 120, 30); // Set the button position and size
         this.add(restartButton);
         restartButton.addActionListener(e -> restartGame());
 
@@ -701,7 +741,11 @@ public class MyFrame extends JFrame implements KeyListener {
 
         ImageIcon logo = new ImageIcon("resources/logo.jpeg");
         this.setIconImage(logo.getImage());
-        this.getContentPane().setBackground(new Color(51,255,153));
+        // this.getContentPane().setBackground(new Color(51,255,153));
+        // background image to the screen
+        JLabel background = new JLabel(new ImageIcon("resources/image.png"));
+        background.setBounds(0, 0, 1200, 800);
+        this.add(background);
         
         // Add a border to the panel
         imagepanel.setBorder(BorderFactory.createLineBorder(Color.black));

@@ -2,7 +2,7 @@ import javax.swing.*;
 import java.awt.*;
 
 public class PlayerBox extends JPanel {
-    private final String playerName;
+    private String playerName;
     private JPanel PlayerBox;
     private boolean isCurrentPlayer;
     private int[] images = {21,22,23,24,25,26,27,28,29,30,31,32,33,34,35,36};
@@ -11,6 +11,15 @@ public class PlayerBox extends JPanel {
         this.playerName = playerName;
         this.isCurrentPlayer = false;
         setBackground(Color.WHITE); // Set the default background color
+    }
+
+    public String getPlayerName() {
+        return playerName;
+    }
+
+    public void setPlayerName(String playerName) {
+        this.playerName = playerName;
+        repaint(); // Repaint to show the updated name
     }
 
     public void removeImage() {
