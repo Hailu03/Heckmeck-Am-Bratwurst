@@ -111,39 +111,39 @@ public class scoreboard extends JFrame {
     }
 
     // test this file
-    public static void main(String[] args) {
-        List<Player> players = new ArrayList<>();
-        players.add(new Player("Player 1"));
-        // tile of player 1
-        players.get(0).getTiles().add(new Tile(21));
-        players.get(0).getTiles().add(new Tile(28));
-        players.get(0).getTiles().add(new Tile(34));
+    // public static void main(String[] args) {
+    //     List<Player> players = new ArrayList<>();
+    //     players.add(new Player("Player 1"));
+    //     // tile of player 1
+    //     players.get(0).getTiles().add(new Tile(21));
+    //     players.get(0).getTiles().add(new Tile(28));
+    //     players.get(0).getTiles().add(new Tile(34));
 
-        players.add(new Player("Player 2"));
-        players.get(1).getTiles().add(new Tile(27));
+    //     players.add(new Player("Player 2"));
+    //     players.get(1).getTiles().add(new Tile(27));
 
-        players.add(new Player("Player 3"));
-        players.get(2).getTiles().add(new Tile(26));
-        players.get(2).getTiles().add(new Tile(36));
-        players.get(2).getTiles().add(new Tile(31));
-        players.get(2).getTiles().add(new Tile(33));
+    //     players.add(new Player("Player 3"));
+    //     players.get(2).getTiles().add(new Tile(26));
+    //     players.get(2).getTiles().add(new Tile(36));
+    //     players.get(2).getTiles().add(new Tile(31));
+    //     players.get(2).getTiles().add(new Tile(33));
 
-        players.add(new Player("Player 4"));
-        players.get(3).getTiles().add(new Tile(29));
-        players.get(3).getTiles().add(new Tile(25));
+    //     players.add(new Player("Player 4"));
+    //     players.get(3).getTiles().add(new Tile(29));
+    //     players.get(3).getTiles().add(new Tile(25));
 
-        players.add(new Player("Player 5"));
-        players.get(4).getTiles().add(new Tile(22));
-        players.get(4).getTiles().add(new Tile(23));
-        players.get(4).getTiles().add(new Tile(24));
+    //     players.add(new Player("Player 5"));
+    //     players.get(4).getTiles().add(new Tile(22));
+    //     players.get(4).getTiles().add(new Tile(23));
+    //     players.get(4).getTiles().add(new Tile(24));
 
-        players.add(new Player("Player 6"));
-        players.get(5).getTiles().add(new Tile(30));
+    //     players.add(new Player("Player 6"));
+    //     players.get(5).getTiles().add(new Tile(30));
 
-        players.add(new Player("Player 7"));
-        players.get(6).getTiles().add(new Tile(32));
-        players.get(6).getTiles().add(new Tile(33));
+    //     players.add(new Player("Player 7"));
+    //     players.get(6).getTiles().add(new Tile(32));
+    //     players.get(6).getTiles().add(new Tile(33));
 
-        new scoreboard(players);
-    }
+    //     new scoreboard(players);
+    // }
 }
