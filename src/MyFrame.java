@@ -2,10 +2,14 @@ import java.awt.Color;
 import java.awt.Image;
 import java.awt.Font;
 import java.awt.Dimension;
-import java.awt.image.ImageObserver;
+import java.awt.event.KeyListener;
+import java.awt.event.KeyEvent;
+import java.awt.Point;
 
-import java.util.Stack;
-import java.util.Collections;
+
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
 
 import javax.swing.Box;
 import javax.swing.BorderFactory;
@@ -17,43 +21,39 @@ import javax.swing.JButton;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.BoxLayout;
-import javax.swing.border.Border;
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-
-
-import java.util.Random;
+import javax.swing.Timer;
 
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
-import java.awt.BorderLayout;
-
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
-
-// Hash map
 import java.util.HashMap;
 import java.util.Map;
-
-// KeyListener
-import java.awt.event.KeyListener;
-import java.awt.event.KeyEvent;
+import java.util.Stack;
+import java.util.Collections;
+import java.util.Random;
 
 public class MyFrame extends JFrame implements KeyListener {
+    // Add a member variable for the temporary tile image
+    private JLabel tempTileLabel;
+    
+    private Clip backgroundMusic;
+    private ImageIcon movingImageIcon;
+    private JLabel movingImageLabel;
     private int DICE_COUNT = 8;
     ImageIcon imgpanelbackground = new ImageIcon("resources/coins.png");
     Image ImgPanelBackground = imgpanelbackground.getImage();
     ImagePanel imagepanel = new ImagePanel(ImgPanelBackground);
-
+    
     // Inside the creatingPlayer class constructor
     private JButton restartButton;
     int playerScore = 0;
     private JLabel gifLabel;
-
+    
     ImageLabel[] diceImgs = new ImageLabel[DICE_COUNT];
     Map<Integer, Integer> DiceArray = new HashMap<Integer, Integer>();
     private List<PlayerBox> Boxes = new ArrayList<>();
@@ -61,27 +61,102 @@ public class MyFrame extends JFrame implements KeyListener {
     private boolean canClick = false;
     private boolean stopButtonClick = false;
     private ImagePanel DicePanel;
-
+    
     JButton rollButton = new JButton("Roll All Dice!");
-
+    
     List<Integer> images;
-
+    
     JLabel playerName = new JLabel();
-
+    
     // add players
     private List<Player> players = new ArrayList<>();
     private int currentPlayerIndex = 0;
-
+    
     private void addPlayers(String... playerNames) {
         for (String name : playerNames) {
             players.add(new Player(name));
         }
     }
 
+    private void playBackgroundMusic() {
+        try {
+            File musicFile = new File("resources/mainFrame.wav");
+            AudioInputStream audioInput = AudioSystem.getAudioInputStream(musicFile);
+            backgroundMusic = AudioSystem.getClip();
+            backgroundMusic.open(audioInput);
+            backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void playSoundEffect(String filePath) {
+        try {
+            File soundEffectFile = new File(filePath);
+            AudioInputStream audioInput = AudioSystem.getAudioInputStream(soundEffectFile);
+            Clip soundEffect = AudioSystem.getClip();
+            soundEffect.open(audioInput);
+            soundEffect.start();
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    
+    // Add this method to initialize the temporary tile image
+    private void initializeTempTileImage(int tileValue) {
+        ImageIcon tempTileIcon = new ImageIcon(String.format("resources/%d.jpg", tileValue));
+        Image newImg = tempTileIcon.getImage().getScaledInstance(69, 118, Image.SCALE_SMOOTH); 
+        tempTileIcon = new ImageIcon(newImg);
+        
+        tempTileLabel = new JLabel(tempTileIcon);
+        tempTileLabel.setSize(69, 118);
+        tempTileLabel.setVisible(true);
+        MyFrame.this.add(tempTileLabel);
+        animateTempTile(new Tile(tileValue));
+    }
+
+    // Update the method to handle the animation
+    private void animateTempTile(Tile tile) {
+        int tileIndex = images.indexOf(tile.getValue()); // Get the index of the tile in the grill
+        int startX = getWidth()/2;  // Get the starting x-coordinate based on tile position
+        int startY = 10;  // Get the starting y-coordinate based on tile position
+        int endX = getWidth()/2;  // Ending x-coordinate (player box position)
+        int endY = getHeight()-50; 
+        int delta = 15;
+
+        tempTileLabel.setBounds(startX, startY, 69, 118);
+        getContentPane().setComponentZOrder(tempTileLabel, 0);
+        tempTileLabel.setVisible(true);
+
+        Timer timer = new Timer(1, new ActionListener() {
+            int currentX = startX;
+            int currentY = startY;
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (currentY > endY) {
+                    // Animation completed
+                    tempTileLabel.setVisible(false);
+                    ((Timer) e.getSource()).stop();
+                } else {
+                    // Move the temporary tile image
+                    tempTileLabel.setBounds(currentX, currentY, 69, 118);
+                    currentY += delta; // Adjust the speed of animation
+                }
+            }
+        });
+
+        // Start the timer to initiate the animation
+        timer.start();
+        this.repaint();
+        this.revalidate();
+    }
+
     private Player getCurrentPlayer() {
         return players.get(currentPlayerIndex % players.size());
     }
-
+    
     private void restartGame() {
         int choose = JOptionPane.showConfirmDialog(null,"Do you want to restart game?", "choose one", JOptionPane.YES_NO_OPTION);
         if(choose == 0) {
@@ -193,23 +268,16 @@ public class MyFrame extends JFrame implements KeyListener {
             if(temp == 6) {
                 temp = 5;
             }
-            System.out.println("Key = " + each.getKey() + ", Value = " + each.getValue());
             dice_score += each.getValue() * temp;
         }
 
-        System.out.println(getCurrentPlayer().getName() + ": " + dice_score);
-
         if(dice_score > 20 && dice_score < 37 && images.contains(dice_score)) {
+            initializeTempTileImage(dice_score);
             // Create a Tile object with the dice_score
             Tile tile = new Tile(dice_score);
             
             // Push the Tile onto the player's tiles stack
             players.get(currentPlayerIndex % players.size()).getTiles().push(tile);
-            // print
-            // System.out.println(players.get(currentPlayerIndex % players.size()).getTiles().peek().getValue());
-            for(Tile p : players.get(currentPlayerIndex % players.size()).getTiles()) {
-                System.out.println(p.getValue());
-            }
 
             int temp = -1;
             for(int i = 0; i < images.size(); i++) {
@@ -259,8 +327,6 @@ public class MyFrame extends JFrame implements KeyListener {
                             PlayerBoxBeingStealed.removeImage();
                         }
 
-                        System.out.println(steal.getValue());
-
                         PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
                         currentPlayerBox.updateImage(steal.getValue());
                         break;
@@ -284,16 +350,12 @@ public class MyFrame extends JFrame implements KeyListener {
                 if(!check) {
                     returnAndFlip();
                 } else {
+                    initializeTempTileImage(dice_score);
                     // Create a Tile object with the dice_score
                     Tile tile = new Tile(dice_score);
                     
                     // Push the Tile onto the player's tiles stack
                     players.get(currentPlayerIndex % players.size()).getTiles().push(tile);
-                    // print
-                    // System.out.println(players.get(currentPlayerIndex % players.size()).getTiles().peek().getValue());
-                    for(Tile p : players.get(currentPlayerIndex % players.size()).getTiles()) {
-                        System.out.println(p.getValue());
-                    }
         
                     int temp = -1;
                     for(int i = 0; i < images.size(); i++) {
@@ -446,7 +508,6 @@ public class MyFrame extends JFrame implements KeyListener {
                                 }
                             }
                             DICE_COUNT -= count; // Update the number of remaining dice
-                            System.out.println(DICE_COUNT);
     
                             DicePanel.revalidate();
                             DicePanel.repaint();
@@ -466,8 +527,6 @@ public class MyFrame extends JFrame implements KeyListener {
                             playerName.setText(String.format("%s : %d",getCurrentPlayer().getName(),playerScore));
 
                             // Add remaining images to the frame
-                            System.out.println("Clicked on: " + imageName.charAt(imageName.length() - 5) + " appears " + count + " times");
-                        
                             PlayerBox currentPlayerBox = Boxes.get(currentPlayerIndex%players.size());
                             currentPlayerBox.setPlayerName(String.format("%s : %d",players.get(currentPlayerIndex%players.size()).getName(),playerScore));
                         }
@@ -493,7 +552,6 @@ public class MyFrame extends JFrame implements KeyListener {
 
                 @Override
                 public void mouseEntered(MouseEvent me) {
-                    System.out.println("Mouse entered");
                     ImageLabel clickedLabel = (ImageLabel) me.getSource();
                     String imageName = clickedLabel.getImageName();
 
@@ -506,7 +564,6 @@ public class MyFrame extends JFrame implements KeyListener {
 
                 @Override
                 public void mouseExited(MouseEvent me) {
-                    System.out.println("Mouse exited");
                     ImageLabel clickedLabel = (ImageLabel) me.getSource();
                     String imageName = clickedLabel.getImageName();
                     
@@ -534,7 +591,6 @@ public class MyFrame extends JFrame implements KeyListener {
                     if(checkWorm()) {
                         int choose = JOptionPane.showConfirmDialog(null,"Do you want to stop your turn?", "choose one", JOptionPane.YES_NO_OPTION);
                         if(choose == 0) {
-                            System.out.println("Stop!!!");
                             calculateTotalDice();
                             stopButtonClick = false;
                             NextTurn();
@@ -624,25 +680,27 @@ public class MyFrame extends JFrame implements KeyListener {
     
 
     MyFrame(List<String> playerNames) {
+        playBackgroundMusic();
+        
         setLayout(null); // Set layout to null
         this.addKeyListener(this); // Add the KeyListener to the frame
         this.setFocusable(true); // Ensure the frame can receive focus
-
+        
         images = new ArrayList<>();
         for (int i = 21; i < 37; i++) {
             images.add(i);
         }
-
+        
         //1. Add Players
         for(String name : playerNames) {
             addPlayers(name);
         }
-
+        
         // Load the GIF from the resources folder
         ImageIcon gifIcon = new ImageIcon("resources/giphy.gif");
         // Create a JLabel to display the GIF
         gifLabel = new JLabel(gifIcon);
-        gifLabel.setBounds(350, 25, gifIcon.getIconWidth(), gifIcon.getIconHeight());
+        gifLabel.setBounds(350, 10, gifIcon.getIconWidth(), gifIcon.getIconHeight());
         // resize the gif
         Image gifImage = gifIcon.getImage();
         int scale = 3;
@@ -651,25 +709,54 @@ public class MyFrame extends JFrame implements KeyListener {
         gifIcon = new ImageIcon(newGifImage);
         gifLabel.setIcon(gifIcon);
         this.add(gifLabel);
-
+        
+        // Load the moving image from the resources folder
+        movingImageIcon = new ImageIcon("resources/fans.png");
+        // resize
+        Image movingImage = movingImageIcon.getImage();
+        int scaleMovingImage = 5;
+        Image newMovingImage = movingImage.getScaledInstance(movingImageIcon.getIconWidth()/scaleMovingImage, movingImageIcon.getIconHeight()/scaleMovingImage, Image.SCALE_DEFAULT);
+        movingImageIcon = new ImageIcon(newMovingImage);
+        
+        // Create a JLabel to display the moving image
+        movingImageLabel = new JLabel(movingImageIcon);
+        movingImageLabel.setBounds(0, 10, movingImageIcon.getIconWidth(), movingImageIcon.getIconHeight());
+        this.add(movingImageLabel);
+        
+        // Set up a timer to move the image at regular intervals
+        Timer timer = new Timer(10, new ActionListener() {
+            int x = 0-movingImageIcon.getIconWidth(); // Initial x-coordinate of the moving image
+            int dx = 2;
+            
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                // Update the x-coordinate to move the image to the right
+                movingImageLabel.setBounds(x, 10, movingImageIcon.getIconWidth(), movingImageIcon.getIconHeight());
+                
+                // If the image goes beyond the frame width, reset its position
+                if (x > getWidth()) {
+                    dx = -2;
+                } 
+                
+                if (x <= 0-movingImageIcon.getIconWidth()) {
+                    dx = 2;
+                }
+                x += dx;
+            }
+        });
+        timer.start();
+        
         // Set background image for backgroundPanel using custom ImagePanel class
         ImageIcon backgroundIcon = new ImageIcon("resources/woodtable.jpg");
         Image backgroundImage = backgroundIcon.getImage();
-        // ImagePanel backgroundPanel = new ImagePanel(backgroundImage);
-        // backgroundPanel.setLayout(null); // Set layout to null for manual positioning
-        // backgroundPanel.setBounds(180, 300, 800, 120);
-
+        
         // Create a JPanel to hold the dice images
         DicePanel = new ImagePanel(backgroundImage);
         DicePanel.setBounds(180, 300, 800, 120);
         DicePanel.setLayout(new BoxLayout(DicePanel, BoxLayout.X_AXIS));
         DicePanel.setBackground(new Color(51,255,153));
-
-        // Add components
-        // backgroundPanel.add(DicePanel);
-        
         this.add(DicePanel);
-
+        
         // Create a JPanel to hold multiple PlayerBoxes
         JPanel playerPanel = new JPanel();
         playerPanel.setBackground(new Color(51,255,153));
@@ -703,9 +790,7 @@ public class MyFrame extends JFrame implements KeyListener {
 
         // Add the playerPanel to a JScrollPane
         JScrollPane scrollPane = new JScrollPane(playerPanel);
-        // scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
-        // scrollPane.setBounds(1000, 124, 190, 635);
         scrollPane.setBounds(0, 543, 1186, 220);
         this.add(scrollPane);
 
@@ -741,7 +826,6 @@ public class MyFrame extends JFrame implements KeyListener {
 
         ImageIcon logo = new ImageIcon("resources/logo.jpeg");
         this.setIconImage(logo.getImage());
-        // this.getContentPane().setBackground(new Color(51,255,153));
         // background image to the screen
         JLabel background = new JLabel(new ImageIcon("resources/image.png"));
         background.setBounds(0, 0, 1200, 800);

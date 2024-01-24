@@ -1,4 +1,6 @@
 import javax.swing.*;
+import javax.swing.border.Border;
+
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent; // Import KeyEvent
@@ -7,6 +9,7 @@ import java.util.List; // Import List
 
 public class scoreboard extends JFrame {
     private JPanel scoreboardPanel;
+    Border border = BorderFactory.createMatteBorder(1, 1, 1, 1, Color.BLACK); // Change color as needed
 
     public scoreboard(List<Player> players) {
         setTitle("Scoreboard");
@@ -14,17 +17,6 @@ public class scoreboard extends JFrame {
         setSize(800, 600); // Adjust size as needed
         // background color to green
         setLocationRelativeTo(null);
-
-        // scoreboardPanel = new JPanel(new GridLayout(players.size() + 1, 3)); // +1 for header row
-        // // color of the scoreboard (light green)
-        // scoreboardPanel.setBackground(new Color(0, 250, 150));
-        // addHeader();
-        // populateScoreboard(players);
-
-        // JScrollPane scrollPane = new JScrollPane(scoreboardPanel);
-        // add(scrollPane);
-
-        // setVisible(true);
 
         scoreboardPanel = new JPanel(new GridLayout(players.size() + 1, 3)); // +1 for header row
         scoreboardPanel.setBackground(new Color(0, 250, 150));
@@ -63,17 +55,32 @@ public class scoreboard extends JFrame {
     }
 
     private void addHeader() {
+        Color headerColor = Color.RED; // Change to the color you want
+        Color backgroundColor = Color.YELLOW; // Change to the color you want
+
         JLabel nameLabel = new JLabel("Player Name");
         nameLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        nameLabel.setForeground(headerColor);
+        nameLabel.setBackground(backgroundColor);
+        nameLabel.setOpaque(true);
         scoreboardPanel.add(nameLabel);
+        nameLabel.setBorder(border);
 
         JLabel scoreLabel = new JLabel("Score");
         scoreLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        scoreLabel.setForeground(headerColor);
+        scoreLabel.setBackground(backgroundColor);
+        scoreLabel.setOpaque(true);
         scoreboardPanel.add(scoreLabel);
+        scoreLabel.setBorder(border);
 
         JLabel tilesLabel = new JLabel("Tiles Acquired");
         tilesLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        tilesLabel.setForeground(headerColor);
+        tilesLabel.setBackground(backgroundColor);
+        tilesLabel.setOpaque(true);
         scoreboardPanel.add(tilesLabel);
+        tilesLabel.setBorder(border);
     }
 
     private void populateScoreboard(List<Player> players) {
@@ -99,6 +106,10 @@ public class scoreboard extends JFrame {
                 tilesPanel.add(tileLabel);
             }
             scoreboardPanel.add(tilesPanel);
+
+            scoreLabel.setBorder(border);
+            playerNameLabel.setBorder(border);
+            tilesPanel.setBorder(border);
         }
     }
 
@@ -111,39 +122,39 @@ public class scoreboard extends JFrame {
     }
 
     // test this file
-    // public static void main(String[] args) {
-    //     List<Player> players = new ArrayList<>();
-    //     players.add(new Player("Player 1"));
-    //     // tile of player 1
-    //     players.get(0).getTiles().add(new Tile(21));
-    //     players.get(0).getTiles().add(new Tile(28));
-    //     players.get(0).getTiles().add(new Tile(34));
+    public static void main(String[] args) {
+        List<Player> players = new ArrayList<>();
+        players.add(new Player("Player 1"));
+        // tile of player 1
+        players.get(0).getTiles().add(new Tile(21));
+        players.get(0).getTiles().add(new Tile(28));
+        players.get(0).getTiles().add(new Tile(34));
 
-    //     players.add(new Player("Player 2"));
-    //     players.get(1).getTiles().add(new Tile(27));
+        players.add(new Player("Player 2"));
+        players.get(1).getTiles().add(new Tile(27));
 
-    //     players.add(new Player("Player 3"));
-    //     players.get(2).getTiles().add(new Tile(26));
-    //     players.get(2).getTiles().add(new Tile(36));
-    //     players.get(2).getTiles().add(new Tile(31));
-    //     players.get(2).getTiles().add(new Tile(33));
+        players.add(new Player("Player 3"));
+        players.get(2).getTiles().add(new Tile(26));
+        players.get(2).getTiles().add(new Tile(36));
+        players.get(2).getTiles().add(new Tile(31));
+        players.get(2).getTiles().add(new Tile(33));
 
-    //     players.add(new Player("Player 4"));
-    //     players.get(3).getTiles().add(new Tile(29));
-    //     players.get(3).getTiles().add(new Tile(25));
+        players.add(new Player("Player 4"));
+        players.get(3).getTiles().add(new Tile(29));
+        players.get(3).getTiles().add(new Tile(25));
 
-    //     players.add(new Player("Player 5"));
-    //     players.get(4).getTiles().add(new Tile(22));
-    //     players.get(4).getTiles().add(new Tile(23));
-    //     players.get(4).getTiles().add(new Tile(24));
+        players.add(new Player("Player 5"));
+        players.get(4).getTiles().add(new Tile(22));
+        players.get(4).getTiles().add(new Tile(23));
+        players.get(4).getTiles().add(new Tile(24));
 
-    //     players.add(new Player("Player 6"));
-    //     players.get(5).getTiles().add(new Tile(30));
+        players.add(new Player("Player 6"));
+        players.get(5).getTiles().add(new Tile(30));
 
-    //     players.add(new Player("Player 7"));
-    //     players.get(6).getTiles().add(new Tile(32));
-    //     players.get(6).getTiles().add(new Tile(33));
+        players.add(new Player("Player 7"));
+        players.get(6).getTiles().add(new Tile(32));
+        players.get(6).getTiles().add(new Tile(33));
 
-    //     new scoreboard(players);
-    // }
+        new scoreboard(players);
+    }
 }

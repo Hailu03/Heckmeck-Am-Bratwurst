@@ -1,20 +1,102 @@
+// timer for gif
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent; // Import KeyEvent
 import java.util.ArrayList; // Import ArrayList
 import java.util.List; // Import List
-// stack
-import java.util.Stack;
+
+import javax.sound.sampled.*;
+import java.io.File;
+import java.io.IOException;
+
+import java.awt.image.BufferedImage;
+import java.awt.event.ActionListener;
+import java.awt.event.ActionEvent;
+
 
 public class WinUI extends JFrame {
+    private Clip backgroundMusic;
     private JPanel blueScreen;
     private JLabel confettiBackground;
-    private JButton startAgainButton;
     private boolean isBlueScreenVisible = true;
     private int commandNum = 0;
 
+    private Timer gifTimer;
+    private int currentFrame = 0;
+    private AnimatedGifLabel winLabel;
+
+    private AnimatedGifLabel createAnimatedGifLabel(String filePath) {
+        ImageIcon gifIcon = new ImageIcon(getClass().getResource(filePath));
+        return new AnimatedGifLabel(gifIcon,200,200);
+    }
+
+    private class AnimatedGifLabel extends JLabel {
+        private ImageIcon animatedGif;
+    
+        public AnimatedGifLabel(ImageIcon gifIcon, int width, int height) {
+            Image gifImage = gifIcon.getImage();
+            Image resizedImage = gifImage.getScaledInstance(width, height, Image.SCALE_DEFAULT);
+            this.animatedGif = new ImageIcon(resizedImage);
+            setIcon(animatedGif);
+        }
+    
+        public void startAnimation() {
+            gifTimer = new Timer(100, new ActionListener() {
+                @Override
+                public void actionPerformed(ActionEvent e) {
+                    currentFrame = (currentFrame + 1) % animatedGif.getIconWidth();
+    
+                    int subimageWidth = Math.min(200, animatedGif.getIconWidth() - currentFrame); // Ensure the subimage width is within bounds
+    
+                    BufferedImage bufferedImage = new BufferedImage(subimageWidth, animatedGif.getIconHeight(), BufferedImage.TYPE_INT_ARGB);
+                    Graphics g = bufferedImage.getGraphics();
+                    animatedGif.paintIcon(null, g, 0, 0);
+                    g.dispose();
+    
+                    ImageIcon frameIcon = new ImageIcon(bufferedImage);
+                    setIcon(frameIcon);
+                    repaint();
+                }
+            });
+            gifTimer.start();
+        }
+    
+        public void stopAnimation() {
+            if (gifTimer != null) {
+                gifTimer.stop();
+            }
+        }
+    }
+
+    // ... existing code ...
+
+    private void playBackgroundMusic() {
+        try {
+            File musicFile = new File("resources/success.wav");
+            AudioInputStream audioInput = AudioSystem.getAudioInputStream(musicFile);
+            backgroundMusic = AudioSystem.getClip();
+            backgroundMusic.open(audioInput);
+            backgroundMusic.loop(1);
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void playSoundEffect(String filePath) {
+        try {
+            File soundEffectFile = new File(filePath);
+            AudioInputStream audioInput = AudioSystem.getAudioInputStream(soundEffectFile);
+            Clip soundEffect = AudioSystem.getClip();
+            soundEffect.open(audioInput);
+            soundEffect.start();
+        } catch (UnsupportedAudioFileException | IOException | LineUnavailableException e) {
+            e.printStackTrace();
+        }
+    }
+
     public WinUI(List<Player> players) {
+        playBackgroundMusic();
         List<Integer> scores = new ArrayList<>();
         int max = 0;
         for (Player player : players) {
@@ -61,7 +143,7 @@ public class WinUI extends JFrame {
         JLayeredPane layeredPane = new JLayeredPane();
         setContentPane(layeredPane);
 
-        ImageIcon confetti = new ImageIcon(getClass().getResource("/resources/winbackground.jpg"));
+        ImageIcon confetti = new ImageIcon(getClass().getResource("/resources/wing.png"));
         //resize image to fit the window
         Image confettiImage = confetti.getImage();
         Image resizedConfettiImage = confettiImage.getScaledInstance(getWidth(), getHeight(), Image.SCALE_SMOOTH);
@@ -97,6 +179,12 @@ public class WinUI extends JFrame {
         blueScreen.setBounds(0, 0, getWidth(), getHeight());
         layeredPane.add(blueScreen, JLayeredPane.MODAL_LAYER);
 
+        // final int idx = winnerIndex;
+        winLabel = createAnimatedGifLabel("/resources/celeb.gif");
+        winLabel.setBounds((getWidth() - 200) / 2, (getHeight() - 200) / 2, 200, 200);
+        layeredPane.add(winLabel, JLayeredPane.PALETTE_LAYER);
+        winLabel.startAnimation();
+
         final int idx = winnerIndex;
 
         JLabel winnerLabel = new JLabel() {
@@ -111,10 +199,11 @@ public class WinUI extends JFrame {
                 String winner = players.get(idx).getName();
                 g.setColor(Color.GRAY);
                 String text = String.format("Winner: %s", winner);
-                g.drawString(text, layeredPane.getWidth()/2-110, 60);
+                g.drawString(text, layeredPane.getWidth()/2-100, 65);
 
                 g.setColor(Color.BLACK);
-                g.drawString(text, layeredPane.getWidth()/2+2-110, 62);
+                g.drawString(text, layeredPane.getWidth()/2+2-100, 67);
+
             }
         };
         // change background color
@@ -262,27 +351,26 @@ public class WinUI extends JFrame {
         timer.start();
     }
 
-    // test main
-    // public static void main(String[] args) {
-    //     List<Player> players = new ArrayList<>();
-    //     players.add(new Player("Hai"));
-    //     players.get(0).getTiles().add(new Tile(29));
-    //     players.get(0).getTiles().add(new Tile(32));
-    //     players.get(0).getTiles().add(new Tile(27));
+    public static void main(String[] args) {
+        List<Player> players = new ArrayList<>();
+        players.add(new Player("Hai"));
+        players.get(0).getTiles().add(new Tile(29));
+        players.get(0).getTiles().add(new Tile(32));
+        players.get(0).getTiles().add(new Tile(27));
 
-    //     players.add(new Player("Hieu"));
-    //     players.get(1).getTiles().add(new Tile(21));
+        players.add(new Player("Hieu"));
+        players.get(1).getTiles().add(new Tile(21));
 
-    //     players.add(new Player("Tri"));
-    //     players.get(2).getTiles().add(new Tile(31));
-    //     players.get(2).getTiles().add(new Tile(30));
-    //     players.get(2).getTiles().add(new Tile(23));
-    //     players.get(2).getTiles().add(new Tile(24));
+        players.add(new Player("Tri"));
+        players.get(2).getTiles().add(new Tile(31));
+        players.get(2).getTiles().add(new Tile(30));
+        players.get(2).getTiles().add(new Tile(23));
+        players.get(2).getTiles().add(new Tile(24));
 
-    //     players.add(new Player("Player 4"));
-    //     players.get(3).getTiles().add(new Tile(29));
-    //     players.get(3).getTiles().add(new Tile(25));
+        players.add(new Player("Player 4"));
+        players.get(3).getTiles().add(new Tile(29));
+        players.get(3).getTiles().add(new Tile(25));
 
-    //     new WinUI(players);
-    // }
+        new WinUI(players);
+    }
 }
